@@ -1,0 +1,80 @@
+apply plugin: 'com.android.library'
+
+android {
+
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        minSdkVersion rootProject.ext.miniSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode rootProject.ext.versionCode
+        versionName rootProject.ext.versionName
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        externalNativeBuild {
+            cmake {
+                cppFlags ""
+                abiFilters 'armeabi-v7a'
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    sourceSets {
+        main {
+            jni.srcDirs = []
+            jniLibs.srcDirs 'src/main/libs'
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
+        }
+    }
+
+    task buildNative(type: Exec, description: 'Compile JNI source via NDK') {
+        def ndkDir = android.ndkDirectory
+        commandLine "$ndkDir/ndk-build",
+                '-C', file('src/main/jni/fdk-aac-0.1.5').absolutePath, // Change src/main/jni the relative path to your jni source
+                '-j', Runtime.runtime.availableProcessors() * 2,
+                'all'
+        //'NDK_DEBUG=1'
+    }
+
+    task cleanNative(type: Exec, description: 'Clean JNI object files via NDK') {
+        def ndkDir = android.ndkDirectory
+        commandLine "${ndkDir}/ndk-build",
+                '-C', file('src/main/jni/fdk-aac-0.1.5').absolutePath, // Change src/main/jni the relative path to your jni source
+                'clean'
+    }
+    task copySo(type: Copy) {
+        from 'src/main/libs/armeabi-v7a/libfdkaac.so'
+        into 'src/main/cpp/video/so/armeabi-v7a'
+//        File libFile = new File('src/main/libs');
+//        libFile.deleteDir();
+//        File objFile = new File('src/main/obj');
+//        objFile.deleteDir();
+    }
+
+    clean.dependsOn 'cleanNative'
+
+    tasks.withType(JavaCompile) {
+        compileTask -> compileTask.dependsOn buildNative, copySo
+
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    compile 'com.android.support:appcompat-v7:25.2.0'
+    testCompile 'junit:junit:4.12'
+}
