@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+import org.apache.tools.ant.taskdefs.condition.Os
 
 android {
 
@@ -40,26 +41,38 @@ android {
 
     task buildNative(type: Exec, description: 'Compile JNI source via NDK') {
         def ndkDir = android.ndkDirectory
-        commandLine "$ndkDir/ndk-build",
-                '-C', file('src/main/jni/fdk-aac-0.1.5').absolutePath, // Change src/main/jni the relative path to your jni source
-                '-j', Runtime.runtime.availableProcessors() * 2,
-                'all'
-        //'NDK_DEBUG=1'
+        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            commandLine "$ndkDir/ndk-build.cmd",
+                    '-C', file('src/main/jni').absolutePath, // Change src/main/jni the relative path to your jni source
+                    '-j', Runtime.runtime.availableProcessors() * 2,
+                    'all'
+        } else {
+            commandLine "$ndkDir/ndk-build",
+                    '-C', file('src/main/jni').absolutePath, // Change src/main/jni the relative path to your jni source
+                    '-j', Runtime.runtime.availableProcessors() * 2,
+                    'all'
+        }
     }
 
     task cleanNative(type: Exec, description: 'Clean JNI object files via NDK') {
         def ndkDir = android.ndkDirectory
-        commandLine "${ndkDir}/ndk-build",
-                '-C', file('src/main/jni/fdk-aac-0.1.5').absolutePath, // Change src/main/jni the relative path to your jni source
-                'clean'
+        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            commandLine "${ndkDir}/ndk-build.cmd",
+                    '-C', file('src/main/jni').absolutePath, // Change src/main/jni the relative path to your jni source
+                    'clean'
+        } else {
+            commandLine "${ndkDir}/ndk-build",
+                    '-C', file('src/main/jni').absolutePath, // Change src/main/jni the relative path to your jni source
+                    'clean'
+        }
     }
     task copySo(type: Copy) {
         from 'src/main/libs/armeabi-v7a/libfdkaac.so'
         into 'src/main/cpp/video/so/armeabi-v7a'
-//        File libFile = new File('src/main/libs');
-//        libFile.deleteDir();
-//        File objFile = new File('src/main/obj');
-//        objFile.deleteDir();
+        File libFile = new File('src/main/libs');
+        libFile.deleteDir();
+        File objFile = new File('src/main/obj');
+        objFile.deleteDir();
     }
 
     clean.dependsOn 'cleanNative'

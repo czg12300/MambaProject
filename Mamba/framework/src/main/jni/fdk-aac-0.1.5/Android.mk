@@ -51,6 +51,6 @@ LOCAL_C_INCLUDES := \
         $(LOCAL_PATH)/libSBRdec/include \
         $(LOCAL_PATH)/libSBRenc/include
 
-LOCAL_MODULE:= libfdkaac
+LOCAL_MODULE:= libsgfdkaac
 
 include $(BUILD_SHARED_LIBRARY)

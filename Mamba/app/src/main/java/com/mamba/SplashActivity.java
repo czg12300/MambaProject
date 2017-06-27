@@ -1,29 +1,37 @@
 package com.mamba;
 
+import android.graphics.Color;
+import android.os.CountDownTimer;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.TextView;
 
-public class SplashActivity extends AppCompatActivity {
+import com.framework.base.BaseActivity;
+import com.framework.utils.JumpUtils;
+import com.framework.widgets.GradientTextView;
+import com.mamba.ui.RecordActivity;
 
-    // Used to load the 'native-lib' library on application startup.
-    static {
-        System.loadLibrary("native-lib");
-    }
+public class SplashActivity extends BaseActivity {
+    private GradientTextView mTvSlogan;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
+        mTvSlogan = (GradientTextView) findViewById(R.id.tv_slogan);
+        mTvSlogan.setText("Mamba");
+        mTvSlogan.setGradientColor(Color.parseColor("#8E049E"), Color.parseColor("#FF4640"));
+        new CountDownTimer(1000, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
 
-        // Example of a call to a native method
-        TextView tv = (TextView) findViewById(R.id.sample_text);
-        tv.setText(stringFromJNI());
+            }
+
+            @Override
+            public void onFinish() {
+                JumpUtils.startActivity(mTvSlogan.getContext(), RecordActivity.class);
+                finish();
+            }
+        }.start();
     }
-
-    /**
-     * A native method that is implemented by the 'native-lib' native library,
-     * which is packaged with this application.
-     */
-    public native String stringFromJNI();
 }

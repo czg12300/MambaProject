@@ -1,47 +1,60 @@
 cmake_minimum_required(VERSION 3.4.1)
 
-#jni的文件目录
-set(jni_dir src/main/cpp/jni)
-#video的文件目录
+
+#ffmpeg的库文件所在位置
+set(lib_DIR ../../../../src/main/jniLibs/${ANDROID_ABI})
+#fdk-aac根目录
+set(fdk_aac_dir src/main/jniLibs/fdk-aac-0.1.5)
+#video的目录下面的文件夹
 set(video_dir src/main/cpp/video)
-#video的so文件目录
-set(video_so_dir ../../../../src/main/cpp/video/so)
-#fdkaac的文件目录
-set(fdk_aac_dir ${video_so_dir}/dk-aac-0.1.5)
+set(video_encode_dir ${video_dir}/encode)
+set(video_format_dir ${video_dir}/videoutils)
+set(video_effect_dir ${video_dir}/effect)
+set(video_common_dir ${video_dir}/common)
 
+#include目录，也就是头文件目录
 include_directories(
-        ${jni_dir}/include
-        ${video_dir}/include
-        ${video_dir}/so/include
-        ${video_dir}/so/include/libfdkaac
-
+        src/main/jniLibs/include
+        ${video_encode_dir}/include
+        ${video_format_dir}/include
+        ${video_effect_dir}/include
+        ${video_common_dir}/include
 )
+
 #导入so文件
 
-add_library(libffmpeg SHARED IMPORTED)
-set_target_properties( libffmpeg
+add_library(libmbffmpeg SHARED IMPORTED)
+set_target_properties( libmbffmpeg
                        PROPERTIES IMPORTED_LOCATION
-                       ${video_so_dir}/armeabi-v7a/libffmpeg.so )
+                       ${lib_DIR}/libsgffmpeg.so )
 
-add_library(libfdkaac SHARED IMPORTED)
-set_target_properties( libfdkaac
-                       PROPERTIES IMPORTED_LOCATION
-                       ${video_so_dir}/armeabi-v7a/libfdkaac.so )
-
-file(GLOB jni_dir_src ${jni_dir}/*.cpp)
-file(GLOB video_dir_src ${video_dir}/*.cpp)
-
-add_library(libframework SHARED
-            ${jni_dir_src}
-            ${video_dir_src}
-            )
-find_library(ndk-lib
-             log
+ file(GLOB video_encode_dir_src ${video_encode_dir}/*.cpp)
+ file(GLOB video_format_dir_src ${video_format_dir}/*.cpp)
+ file(GLOB video_effect_dir_src ${video_effect_dir}/*.cpp)
+ file(GLOB video_common_dir_src ${video_common_dir}/*.cpp)
+ add_library(libframework SHARED
+             ${video_encode_dir_src}
+             ${video_format_dir_src}
+             ${video_effect_dir_src}
+             ${video_common_dir_src}
              )
 
-target_link_libraries(libframework
-                     libffmpeg
-                     libfdkaac
-                     android
-					 ${ndk-lib}
-					  )
+
+ #支持-std=gnu++11
+ #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
+
+ #判断编译器类型,如果是gcc编译器,则在编译选项中加入c++11支持
+ #if(CMAKE_COMPILER_IS_GNUCXX)
+ #   set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
+ #    message(STATUS "optional:-std=c++11")
+ #endif(CMAKE_COMPILER_IS_GNUCXX)
+
+ find_library(ndk-lib
+              log
+              )
+
+ target_link_libraries(libframework
+                      libmbffmpeg
+                      android
+ 					 ${ndk-lib}
+ 					  )
