@@ -1,6 +1,7 @@
 package com.mamba.model.record.encode;
 
 import android.graphics.SurfaceTexture;
+import android.media.ImageReader;
 import android.opengl.EGLContext;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -175,6 +176,8 @@ public class VideoCodecRenderer extends Thread implements ISurfaceRenderer {
         release();
     }
 
+    long lastTimestamp = 0;
+    long time_spit = 1000000;
 
     private void handFrameUpdate(RawFrame rawFrame) {
         if (rawFrame == null) {
@@ -182,10 +185,13 @@ public class VideoCodecRenderer extends Thread implements ISurfaceRenderer {
         }
         VLog.d("handFrameUpdate start");
         if (onRendererListener != null) {
+
             int len = onRendererListener.getRendererFrameTimes(rawFrame.timestamp);
+            int positionFrameRate = 10;
             VLog.d("handFrameUpdate getRendererFrameTimes " + len);
             if (len > 0) {
                 for (int i = 0; i < len; i++) {
+                    long timestamp = lastTimestamp + 1000 / positionFrameRate;
                     onRendererListener.onRenderer();
                     mInput.setTextureTransformMatrix(rawFrame.transform);
                     if (mFilter == null) {
@@ -193,7 +199,9 @@ public class VideoCodecRenderer extends Thread implements ISurfaceRenderer {
                     } else {
                         mFilter.onDrawFrame(rawFrame.textureId, gLCubeBuffer, gLTextureBuffer);
                     }
-//                    mInputWindowSurface.swapBuffers();
+                    mInputWindowSurface.setPresentationTime(timestamp * time_spit);
+                    lastTimestamp=timestamp;
+                    mInputWindowSurface.swapBuffers();
                 }
             }
 
@@ -233,8 +241,6 @@ public class VideoCodecRenderer extends Thread implements ISurfaceRenderer {
 
     public static interface OnRendererListener {
         int getRendererFrameTimes(long timestamp);
-
-        int getPositionFrameRate();
 
         void onStart();
 

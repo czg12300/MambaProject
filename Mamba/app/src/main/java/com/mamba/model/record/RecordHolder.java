@@ -6,7 +6,7 @@ import android.opengl.GLSurfaceView;
 import com.framework.utils.FileUtil;
 import com.mamba.gloable.FolderManager;
 import com.mamba.model.record.camera.CameraImp;
-import com.mamba.model.record.encode.VideoCodecHolder;
+import com.mamba.model.record.encode1.VideoCodecHolder;
 import com.mamba.model.record.encode.VideoCodecParameters;
 import com.mamba.model.record.randerer.CameraRenderer;
 import com.mamba.model.record.randerer.gpuimage.filter.GPUImageFilter;
@@ -21,12 +21,20 @@ import java.io.IOException;
  */
 
 public class RecordHolder {
+    private static final int OUT_WIDTH = 90;
+    private static final int OUT_HEIGHT = 160;
+//    private static final int OUT_WIDTH = 720;
+//    private static final int OUT_HEIGHT = 1280;
+    private static final int PREVIEW_WIDTH = 1280;
+    private static final int PREVIEW_HEIGHT = 720;
     private CameraRenderer cameraRenderer;
     private VideoCodecHolder videoCodecHolder;
 
     public RecordHolder() {
         cameraRenderer = new CameraRenderer();
         videoCodecHolder = new VideoCodecHolder();
+        cameraRenderer.setFrameAvailableListener(videoCodecHolder);
+        cameraRenderer.setOutputSize(OUT_WIDTH, OUT_HEIGHT);
     }
 
     private VideoCodecParameters createVideoCodecParameters() {
@@ -35,8 +43,8 @@ public class RecordHolder {
                 .setCodecType(VideoCodecParameters.CodecType.H264)
                 .setFrameRate(25)
                 .setKeyIFrameInterval(1)
-                .setWidth(720)
-                .setHeight(1280)
+                .setWidth(OUT_WIDTH)
+                .setHeight(OUT_HEIGHT)
                 .setOutFile(getOutFile())
                 .build();
     }
@@ -49,7 +57,7 @@ public class RecordHolder {
     private CameraImp.CameraImpParameters createCameraImpParameters() {
         return CameraImp.CameraImpParametersBuilder.create()
                 .setPreviewFormat(ImageFormat.NV21)
-                .setPreviewSize(new CameraImp.Size(1280, 720))
+                .setPreviewSize(new CameraImp.Size(PREVIEW_WIDTH, PREVIEW_HEIGHT))
                 .build();
     }
 
@@ -68,10 +76,10 @@ public class RecordHolder {
 
     public void startEncode() {
         try {
-            videoCodecHolder.prepare(createVideoCodecParameters());
-            cameraRenderer.setSurfaceRenderer(videoCodecHolder.getVideoCodecRenderer());
-            videoCodecHolder.setPositionFrameRate(6);
-            videoCodecHolder.start();
+            videoCodecHolder.start(createVideoCodecParameters());
+
+
+//            videoCodecHolder.setPositionFrameRate(100);
         } catch (IOException e) {
             e.printStackTrace();
         }
