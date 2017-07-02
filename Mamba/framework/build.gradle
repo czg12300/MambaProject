@@ -30,7 +30,7 @@ android {
     sourceSets {
         main {
             jni.srcDirs = []
-            jniLibs.srcDirs 'src/main/libs'
+            jniLibs.srcDirs 'src/main/libso'
         }
     }
     externalNativeBuild {
@@ -79,7 +79,6 @@ android {
 
     tasks.withType(JavaCompile) {
         compileTask -> compileTask.dependsOn buildNative, copySo
-
     }
 }
 

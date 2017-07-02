@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.4.1)
 #ffmpeg的库文件所在位置
 set(lib_DIR ../../../../src/main/jniLibs/${ANDROID_ABI})
 #fdk-aac根目录
-set(fdk_aac_dir src/main/jniLibs/fdk-aac-0.1.5)
+#set(fdk_aac_dir src/main/jniLibs/fdk-aac-0.1.5)
 #video的目录下面的文件夹
 set(video_dir src/main/cpp/video)
 set(video_encode_dir ${video_dir}/encode)
