@@ -3,10 +3,9 @@ package com.mamba.model.record;
 import android.graphics.ImageFormat;
 import android.opengl.GLSurfaceView;
 
-import com.framework.utils.FileUtil;
 import com.mamba.gloable.FolderManager;
 import com.mamba.model.record.camera.CameraImp;
-import com.mamba.model.record.encode1.VideoCodecHolder;
+import com.mamba.model.record.encode.VideoCodecHolder;
 import com.mamba.model.record.encode.VideoCodecParameters;
 import com.mamba.model.record.randerer.CameraRenderer;
 import com.mamba.model.record.randerer.gpuimage.filter.GPUImageFilter;
@@ -21,10 +20,10 @@ import java.io.IOException;
  */
 
 public class RecordHolder {
-    private static final int OUT_WIDTH = 90;
-    private static final int OUT_HEIGHT = 160;
-//    private static final int OUT_WIDTH = 720;
-//    private static final int OUT_HEIGHT = 1280;
+//    private static final int OUT_WIDTH = 1280;
+//    private static final int OUT_HEIGHT = 720;
+    private static final int OUT_WIDTH = 720;
+    private static final int OUT_HEIGHT = 1280;
     private static final int PREVIEW_WIDTH = 1280;
     private static final int PREVIEW_HEIGHT = 720;
     private CameraRenderer cameraRenderer;
@@ -34,15 +33,14 @@ public class RecordHolder {
         cameraRenderer = new CameraRenderer();
         videoCodecHolder = new VideoCodecHolder();
         cameraRenderer.setFrameAvailableListener(videoCodecHolder);
-        cameraRenderer.setOutputSize(OUT_WIDTH, OUT_HEIGHT);
     }
 
     private VideoCodecParameters createVideoCodecParameters() {
         return VideoCodecParameters.VideoCodecParametersBuilder.create()
-                .setBitRate((int) (1.5 * 1024 * 1024))
+                .setBitRate((int) (2.0 * 1024 *1024))
                 .setCodecType(VideoCodecParameters.CodecType.H264)
                 .setFrameRate(25)
-                .setKeyIFrameInterval(1)
+                .setKeyIFrameInterval(4)
                 .setWidth(OUT_WIDTH)
                 .setHeight(OUT_HEIGHT)
                 .setOutFile(getOutFile())
@@ -77,9 +75,7 @@ public class RecordHolder {
     public void startEncode() {
         try {
             videoCodecHolder.start(createVideoCodecParameters());
-
-
-//            videoCodecHolder.setPositionFrameRate(100);
+            videoCodecHolder.setPositionFrameRate(25);
         } catch (IOException e) {
             e.printStackTrace();
         }

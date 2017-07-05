@@ -127,7 +127,7 @@ public class Camera1 implements CameraImp {
     private void updateCameraParameters() {
         Camera.Parameters parameters = mCamera.getParameters();
 
-        if (parameters.getSupportedFocusModes().contains(Camera.Parameters.FOCUS_MODE_AUTO)){
+        if (parameters.getSupportedFocusModes().contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
             parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
         }
         mPreviewSize = CameraUtils.getLargeSize(CameraUtils.transArrayToList(parameters.getSupportedPreviewSizes()), mPreviewSize.width, mPreviewSize.height);
@@ -303,17 +303,17 @@ public class Camera1 implements CameraImp {
     @Override
     public void release() {
         releaseCamera();
-        if (mCameraImpCallbackList!=null){
+        if (mCameraImpCallbackList != null) {
             mCameraImpCallbackList.clear();
-            mCameraImpCallbackList=null;
+            mCameraImpCallbackList = null;
         }
-        if (mPictureCallbackList!=null){
+        if (mPictureCallbackList != null) {
             mPictureCallbackList.clear();
-            mPictureCallbackList=null;
+            mPictureCallbackList = null;
         }
-        if (mPreviewCallbackList!=null){
+        if (mPreviewCallbackList != null) {
             mPreviewCallbackList.clear();
-            mPreviewCallbackList=null;
+            mPreviewCallbackList = null;
         }
     }
 

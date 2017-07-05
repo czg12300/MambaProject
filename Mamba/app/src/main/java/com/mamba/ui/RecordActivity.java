@@ -42,7 +42,7 @@ public class RecordActivity extends BaseActivity {
         findViewById(R.id.btn_toggle).setOnClickListener(onClickListener);
         mRecordHolder = new RecordHolder();
         mRecordHolder.setGlSurfaceView((GLSurfaceView) findViewById(R.id.gl_camera));
-        mRecordHolder.setFilter(FilterFactory.getFilter(this, FilterType.NO_FILTER));
+        mRecordHolder.setFilter(FilterFactory.getFilter(this, FilterType.BEAUTY));
     }
 
     @Override

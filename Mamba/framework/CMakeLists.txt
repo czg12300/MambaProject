@@ -27,6 +27,10 @@ add_library(libmbffmpeg SHARED IMPORTED)
 set_target_properties( libmbffmpeg
                        PROPERTIES IMPORTED_LOCATION
                        ${lib_DIR}/libsgffmpeg.so )
+add_library(libyuv SHARED IMPORTED)
+set_target_properties( libyuv
+                       PROPERTIES IMPORTED_LOCATION
+                       ${lib_DIR}/libyuv.so )
 
  file(GLOB video_encode_dir_src ${video_encode_dir}/*.cpp)
  file(GLOB video_format_dir_src ${video_format_dir}/*.cpp)
@@ -55,6 +59,7 @@ set_target_properties( libmbffmpeg
 
  target_link_libraries(libframework
                       libmbffmpeg
+                      libyuv
                       android
  					 ${ndk-lib}
  					  )

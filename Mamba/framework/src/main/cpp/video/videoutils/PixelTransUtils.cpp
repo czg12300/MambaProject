@@ -3,7 +3,9 @@
 //
 
 #include "PixelTransUtils.h"
-namespace video{
+
+
+namespace video {
 
 #define max(x, y)  (x>y?x:y)
 #define min(x, y)  (x<y?x:y)
@@ -64,7 +66,253 @@ namespace video{
             }
         }
     }
-    void rgbaToYuv(unsigned char *rgb, int width, int height, unsigned char *yuv){
-        rgbaToYuv(width,height,rgb,yuv,1);
+
+    void rgbaToYuv(unsigned char *rgb, int width, int height, unsigned char *yuv) {
+        rgbaToYuv(width, height, rgb, yuv, 1);
+//        RGBAToI420()
+    }
+
+    int VideoStreamProcess(unsigned char *Src_data, unsigned char *Dst_data,
+                           int src_width, int src_height,
+                           bool EnableRotate, bool EnableMirror,
+                           unsigned char *Dst_data_mirror, unsigned char *Dst_data_rotate,
+                           int rotatemodel) {
+        //src:NV12 video size
+        int NV12_Size = src_width * src_height * 3 / 2;
+        int NV12_Y_Size = src_width * src_height;
+
+        //dst:YUV420 video size
+        int I420_Size = src_width * src_height * 3 / 2;
+        int I420_Y_Size = src_width * src_height;
+        int I420_U_Size = (src_width >> 1) * (src_height >> 1);
+        int I420_V_Size = I420_U_Size;
+
+        // video format transformation process
+        unsigned char *Y_data_Src = Src_data;
+        unsigned char *UV_data_Src = Src_data + NV12_Y_Size;
+        int src_stride_y = src_width;
+        int src_stride_uv = src_width;
+
+        unsigned char *Y_data_Dst = Dst_data;
+        unsigned char *U_data_Dst = Dst_data + I420_Y_Size;
+        unsigned char *V_data_Dst = Dst_data + I420_Y_Size + I420_U_Size;
+
+        int Dst_Stride_Y = src_width;
+        int Dst_Stride_U = src_width >> 1;
+        int Dst_Stride_V = Dst_Stride_U;
+//NV12ToI420
+        libyuv::NV21ToI420(Y_data_Src, src_stride_y,
+                           UV_data_Src, src_stride_uv,
+                           Y_data_Dst, Dst_Stride_Y,
+                           U_data_Dst, Dst_Stride_U,
+                           V_data_Dst, Dst_Stride_V,
+                           src_width, src_height);
+
+
+
+
+        // video mirror process
+        unsigned char *Y_data_Dst_mirror = Dst_data_mirror;
+        unsigned char *U_data_Dst_mirror = Dst_data_mirror + I420_Y_Size;
+        unsigned char *V_data_Dst_mirror = Dst_data_mirror + I420_Y_Size + I420_U_Size;
+        int Dst_Stride_Y_mirror = src_width;
+        int Dst_Stride_U_mirror = src_width >> 1;
+        int Dst_Stride_V_mirror = Dst_Stride_U_mirror;
+
+        if (EnableMirror) {
+            libyuv::I420Mirror(Y_data_Dst, Dst_Stride_Y,
+                               U_data_Dst, Dst_Stride_U,
+                               V_data_Dst, Dst_Stride_V,
+                               Y_data_Dst_mirror, Dst_Stride_Y_mirror,
+                               U_data_Dst_mirror, Dst_Stride_U_mirror,
+                               V_data_Dst_mirror, Dst_Stride_V_mirror,
+                               src_width, src_height);
+        }
+
+        //video rotate process
+        if (EnableRotate) {
+            int Dst_Stride_Y_rotate;
+            int Dst_Stride_U_rotate;
+            int Dst_Stride_V_rotate;
+            unsigned char *Y_data_Dst_rotate = Dst_data_rotate;
+            unsigned char *U_data_Dst_rotate = Dst_data_rotate + I420_Y_Size;
+            unsigned char *V_data_Dst_rotate = Dst_data_rotate + I420_Y_Size + I420_U_Size;
+
+            if (rotatemodel == libyuv::kRotate90 || rotatemodel == libyuv::kRotate270) {
+                Dst_Stride_Y_rotate = src_height;
+                Dst_Stride_U_rotate = src_height >> 1;
+                Dst_Stride_V_rotate = Dst_Stride_U_rotate;
+            } else {
+                Dst_Stride_Y_rotate = src_width;
+                Dst_Stride_U_rotate = src_width >> 1;
+                Dst_Stride_V_rotate = Dst_Stride_U_rotate;
+            }
+
+            if (EnableMirror) {
+                libyuv::I420Rotate(Y_data_Dst_mirror, Dst_Stride_Y_mirror,
+                                   U_data_Dst_mirror, Dst_Stride_U_mirror,
+                                   V_data_Dst_mirror, Dst_Stride_V_mirror,
+                                   Y_data_Dst_rotate, Dst_Stride_Y_rotate,
+                                   U_data_Dst_rotate, Dst_Stride_U_rotate,
+                                   V_data_Dst_rotate, Dst_Stride_V_rotate,
+                                   src_width, src_height,
+                                   (libyuv::RotationMode) rotatemodel);
+            } else {
+                libyuv::I420Rotate(Y_data_Dst, Dst_Stride_Y,
+                                   U_data_Dst, Dst_Stride_U,
+                                   V_data_Dst, Dst_Stride_V,
+                                   Y_data_Dst_rotate, Dst_Stride_Y_rotate,
+                                   U_data_Dst_rotate, Dst_Stride_U_rotate,
+                                   V_data_Dst_rotate, Dst_Stride_V_rotate,
+                                   src_width, src_height,
+                                   (libyuv::RotationMode) rotatemodel);
+            }
+        }
+        return 0;
+    }
+
+    void
+    yuv420spToYuv420p(unsigned char *yuv, int width, int height, unsigned char *yuv420p,
+                      int dest_width,
+                      int dest_height) {
+        uint8 *src_y = yuv;
+        int src_stride_y = width;
+        uint8 *src_vu = yuv + width * height;
+        int src_stride_vu = width;
+
+        LOGD("yuv420spToYuv420p start");
+        int len = width * height;
+        int size = len * 3 / 2;
+        uint8 *output = new uint8[size];
+
+        uint8 *dst_y = yuv420p;
+        int dst_stride_y = width;
+        uint8 *dst_u = dst_y + len;
+        int dst_stride_u = width >> 1;
+        uint8 *dst_v = dst_u + (width >> 1) * (height >> 1);;
+        int dst_stride_v = dst_stride_u;
+        LOGD("yuv420spToYuv420p start");
+        NV21ToI420(src_y, src_stride_y,
+                   src_vu, src_stride_vu,
+                   dst_y, dst_stride_y,
+                   dst_u, dst_stride_u,
+                   dst_v, dst_stride_v,
+                   width, height);
+        LOGD("yuv420spToYuv420p NV12ToI420Rotate");
+        uint8 *output1 = new uint8[size];
+        int len1 = dest_width * dest_height;
+        uint8 *dst_y1 = output1;
+        int dst_stride_y1 = dest_width;
+        uint8 *dst_u1 = dst_y1 + (len1);
+        int dst_stride_u1 = dest_width / 2;
+        uint8 *dst_v1 = dst_u1 + (len1) / 4;
+        int dst_stride_v1 = dest_width / 2;
+        I420Rotate(dst_y, dst_stride_y,
+                   dst_u, dst_stride_u,
+                   dst_v, dst_stride_v,
+                   dst_y1, dst_stride_y1,
+                   dst_u1, dst_stride_u1,
+                   dst_v1, dst_stride_v1,
+                   width, height,
+                   kRotate90
+        );
+        delete[]output;
+
+        uint8 *src_y2 = yuv420p;
+        int src_stride_y2 = dest_width;
+        uint8 *src_vu2 = yuv420p + dest_width * dest_height;
+        int src_stride_vu2 = dest_width;
+
+        I420ToNV12(
+                dst_y1, dst_stride_y1,
+                dst_u1, dst_stride_u1,
+                dst_v1, dst_stride_v1,
+                src_y2, src_stride_y2,
+                src_vu2, src_stride_vu2,
+                dest_width, dest_height
+        );
+        LOGD("yuv420spToYuv420p I420Scale");
+        delete[]output1;
+        LOGD("yuv420spToYuv420p success");
+    }
+
+    void
+    nv21ToYv12(unsigned char *yuv, int width, int height, unsigned char *yuv420p,
+               int dest_width,
+               int dest_height, int rotate) {
+        uint8 *src_y = yuv;
+        int src_stride_y = width;
+        uint8 *src_vu = yuv + width * height;
+        int src_stride_vu = width;
+
+        LOGD("yuv420spToYuv420p start");
+        int len = width * height;
+        int size = len * 3 / 2;
+        uint8 *output = new uint8[size];
+
+        uint8 *dst_y = yuv420p;
+        int dst_stride_y = width;
+        uint8 *dst_u = dst_y + len;
+        int dst_stride_u = width >> 1;
+        uint8 *dst_v = dst_u + (width >> 1) * (height >> 1);;
+        int dst_stride_v = dst_stride_u;
+        LOGD("yuv420spToYuv420p start");
+        NV21ToI420(src_y, src_stride_y,
+                   src_vu, src_stride_vu,
+                   dst_y, dst_stride_y,
+                   dst_u, dst_stride_u,
+                   dst_v, dst_stride_v,
+                   width, height);
+        LOGD("yuv420spToYuv420p NV12ToI420Rotate");
+        uint8 *output1 = new uint8[size];
+        int len1 = dest_width * dest_height;
+        uint8 *dst_y1 = output1;
+        int dst_stride_y1 = dest_width;
+        uint8 *dst_u1 = dst_y1 + (len1);
+        int dst_stride_u1 = dest_width / 2;
+        uint8 *dst_v1 = dst_u1 + (len1) / 4;
+        int dst_stride_v1 = dest_width / 2;
+        RotationMode mode = kRotate0;
+        switch (rotate) {
+            case 0:
+                mode = kRotate0;
+                break;
+            case 90:
+                mode = kRotate90;
+                break;
+            case 180:
+                mode = kRotate180;
+                break;
+            case 270:
+                mode = kRotate270;
+                break;
+        }
+        I420Rotate(dst_y, dst_stride_y,
+                   dst_u, dst_stride_u,
+                   dst_v, dst_stride_v,
+                   dst_y1, dst_stride_y1,
+                   dst_u1, dst_stride_u1,
+                   dst_v1, dst_stride_v1,
+                   width, height,
+                   mode
+        );
+        delete[]output;
+
+        uint8 *src_y2 = yuv420p;
+        int src_stride_y2 = dest_width;
+        uint8 *src_vu2 = yuv420p + dest_width * dest_height;
+        int src_stride_vu2 = dest_width;
+
+        I420ToNV12(
+                dst_y1, dst_stride_y1,
+                dst_u1, dst_stride_u1,
+                dst_v1, dst_stride_v1,
+                src_y2, src_stride_y2,
+                src_vu2, src_stride_vu2,
+                dest_width, dest_height
+        );
+        LOGD("yuv420spToYuv420p I420Scale");
+        delete[]output1;
+        LOGD("yuv420spToYuv420p success");
     }
 }

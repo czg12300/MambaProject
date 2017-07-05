@@ -1,20 +1,15 @@
 package com.mamba.model.record.randerer;
 
 import android.graphics.SurfaceTexture;
-import android.opengl.EGL14;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.Message;
 
 
 import com.mamba.model.VLog;
 import com.mamba.model.record.camera.CameraImp;
 import com.mamba.model.record.camera.CameraImpFactory;
-import com.mamba.model.record.encode1.IFrameAvailableListener;
-import com.mamba.model.record.encode1.VideoFrame;
-import com.mamba.model.record.randerer.gpuimage.FilterFactory;
+import com.mamba.model.record.encode.IFrameAvailableListener;
+import com.mamba.model.record.encode.VideoFrame;
 import com.mamba.model.record.randerer.gpuimage.OpenGlUtils;
 import com.mamba.model.record.randerer.gpuimage.Rotation;
 import com.mamba.model.record.randerer.gpuimage.TextureRotationUtil;
@@ -34,7 +29,7 @@ import javax.microedition.khronos.opengles.GL10;
  * @author jake
  * @since 2017/3/29 下午2:26
  */
-public class CameraRenderer implements GLSurfaceView.Renderer, CameraImp.CameraImpCallback {
+public class CameraRenderer implements GLSurfaceView.Renderer, CameraImp.CameraImpCallback, CameraImp.PreviewCallback {
     public GLSurfaceView mGLSurfaceView;
     protected GPUImageFilter mFilter;
     protected int mTextureId = OpenGlUtils.NO_TEXTURE;
@@ -52,63 +47,7 @@ public class CameraRenderer implements GLSurfaceView.Renderer, CameraImp.CameraI
     }
 
     private CameraImp mCameraImp;
-    private ISurfaceRenderer mSurfaceRenderer;
-    private GL10 mGL10;
-    private Handler mReadHandle;
 
-    public void setFrameAvailableListener(IFrameAvailableListener frameAvailableListener) {
-        this.frameAvailableListener = frameAvailableListener;
-        if (mReadHandle == null) {
-            HandlerThread thread = new HandlerThread("IFrameAvailableListener");
-            thread.start();
-            mReadHandle = new Handler(thread.getLooper(), new Handler.Callback() {
-                @Override
-                public boolean handleMessage(Message msg) {
-                    handleReadMessage(msg);
-                    return false;
-                }
-            });
-        }
-    }
-
-    private static final int MSG_READ = 0x01;
-    private int mOutputWidth;
-    private int mOutputHeight;
-
-    public void setOutputSize(int width, int height) {
-        mOutputWidth = width;
-        mOutputHeight = height;
-    }
-
-    ByteBuffer mByteBuffer;
-
-    private void handleReadMessage(Message msg) {
-        switch (msg.what) {
-            case MSG_READ:
-                readPixel();
-                break;
-        }
-    }
-
-    private void readPixel() {
-        long last = System.currentTimeMillis();
-        int len = mOutputWidth * mOutputHeight * 4;
-        if (mByteBuffer == null) {
-            mByteBuffer = ByteBuffer.allocateDirect(len);
-        }
-        mByteBuffer.clear();
-        mGL10.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureId);
-        mGL10.glReadPixels(0, 0,mOutputWidth,  mOutputHeight, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, mByteBuffer);
-        byte[] data = new byte[len];
-        mByteBuffer.get(data);
-        mByteBuffer.clear();
-        VideoFrame frame = VideoFrame.create(mOutputWidth, mOutputHeight, data, System.currentTimeMillis());
-        if (frameAvailableListener != null) {
-            frameAvailableListener.onFrameAvailable(frame);
-        }
-        long now = System.currentTimeMillis();
-        VLog.d("read time=" + (now - last));
-    }
 
     public CameraRenderer() {
         mGLCubeBuffer = ByteBuffer.allocateDirect(TextureRotationUtil.CUBE.length * 4)
@@ -128,15 +67,13 @@ public class CameraRenderer implements GLSurfaceView.Renderer, CameraImp.CameraI
         if (mGLSurfaceView != null) {
             mCameraImp = CameraImpFactory.getCameraImp(mGLSurfaceView.getContext().getApplicationContext());
             mCameraImp.addCameraImpCallback(this);
+            mCameraImp.addPreviewCallback(this);
             mGLSurfaceView.setEGLContextClientVersion(2);
             mGLSurfaceView.setRenderer(this);
             mGLSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
         }
     }
 
-    public void setSurfaceRenderer(ISurfaceRenderer mSurfaceRenderer) {
-        this.mSurfaceRenderer = mSurfaceRenderer;
-    }
 
     public CameraImp getCameraImp() {
         return mCameraImp;
@@ -144,7 +81,6 @@ public class CameraRenderer implements GLSurfaceView.Renderer, CameraImp.CameraI
 
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-        mGL10 = gl;
         mIsSurfaceCreated = true;
         GLES20.glDisable(GL10.GL_DITHER);
         GLES20.glClearColor(0, 0, 0, 0);
@@ -168,7 +104,6 @@ public class CameraRenderer implements GLSurfaceView.Renderer, CameraImp.CameraI
 
     @Override
     public void onSurfaceChanged(GL10 gl, int width, int height) {
-        mGL10 = gl;
         GLES20.glViewport(0, 0, width, height);
         mSurfaceWidth = width;
         mSurfaceHeight = height;
@@ -186,13 +121,12 @@ public class CameraRenderer implements GLSurfaceView.Renderer, CameraImp.CameraI
             id = mCameraInputFilter.onDrawToTexture(mTextureId);
             mFilter.onDrawFrame(id, mGLCubeBuffer, mGLTextureBuffer);
         }
+
     }
 
 
     @Override
     public void onDrawFrame(GL10 gl) {
-        mGL10 = gl;
-        printFps();
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
         if (mSurfaceTexture == null) {
@@ -209,17 +143,8 @@ public class CameraRenderer implements GLSurfaceView.Renderer, CameraImp.CameraI
             id = mCameraInputFilter.onDrawToTexture(mTextureId);
             mFilter.onDrawFrame(id, mGLCubeBuffer, mGLTextureBuffer);
         }
-        if (mSurfaceRenderer != null) {
-            long timestamp = mSurfaceTexture.getTimestamp() / 1000000;
-            mSurfaceRenderer.onRenderer(EGL14.eglGetCurrentContext(), id, mtx, timestamp, mImageWidth, mImageHeight, FilterFactory.getFilterType(mFilter));
-        }
-//        if (mReadHandle != null) {
-//            mReadHandle.sendEmptyMessage(MSG_READ);
-//        }
-readPixel();
+        VLog.d("onDrawFrame   timestamp  " + mSurfaceTexture.getTimestamp());
     }
-
-    public static native void convertRgba2Yuv(byte[] rgba, int width, int height, byte[] yuv, int type);
 
     long lastTimes = 0;
     int count = 0;
@@ -320,5 +245,18 @@ readPixel();
     @Override
     public void onCameraClosed() {
 
+    }
+
+    public void setFrameAvailableListener(IFrameAvailableListener frameAvailableListener) {
+        this.frameAvailableListener = frameAvailableListener;
+    }
+
+    @Override
+    public void onPreviewFrame(byte[] data, int width, int height, CameraImp cameraImp) {
+        printFps();
+        if (frameAvailableListener != null) {
+            VideoFrame frame = VideoFrame.create(width, height, data, System.currentTimeMillis(), cameraImp.isFacingFront() ? 270 : 90);
+            frameAvailableListener.onFrameAvailable(frame);
+        }
     }
 }
