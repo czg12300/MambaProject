@@ -1,4 +1,4 @@
-package com.mamba.model.record.encode;
+package com.mamba.model.record.encode.video;
 
 /**
  * 视频帧数据

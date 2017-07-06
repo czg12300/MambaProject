@@ -315,4 +315,65 @@ namespace video {
         delete[]output1;
         LOGD("yuv420spToYuv420p success");
     }
+
+    void
+    nv21ToI420(unsigned char *yuv, int width, int height, unsigned char *yuv420p,
+               int dest_width,
+               int dest_height, int rotate) {
+        int lenSrc = width * height;
+        int sizeSrc = lenSrc * 3 / 2;
+        uint8 *src_y = yuv;
+        int src_stride_y = width;
+        uint8 *src_vu = yuv + lenSrc;
+        int src_stride_vu = width;
+        LOGD("yuv420spToYuv420p start");
+
+        uint8 *output = new uint8[sizeSrc];
+        uint8 *dst_y = output;
+        int dst_stride_y = width;
+        uint8 *dst_u = dst_y + lenSrc;
+        int dst_stride_u = width >> 1;
+        uint8 *dst_v = dst_u + (width >> 1) * (height >> 1);
+        int dst_stride_v = dst_stride_u;
+        NV21ToI420(src_y, src_stride_y,
+                   src_vu, src_stride_vu,
+                   dst_y, dst_stride_y,
+                   dst_u, dst_stride_u,
+                   dst_v, dst_stride_v,
+                   width, height);
+        LOGD("yuv420spToYuv420p NV12ToI420Rotate");
+        int dstLen = dest_width * dest_height;
+        uint8 *dst_y1 = yuv420p;
+        int dst_stride_y1 = dest_width;
+        uint8 *dst_u1 = dst_y1 + dstLen;
+        int dst_stride_u1 = dest_width >> 1;
+        uint8 *dst_v1 = dst_u1 + (dest_width >> 1) * (dest_height >> 1);
+        int dst_stride_v1 = dst_stride_u1;
+        RotationMode mode = kRotate0;
+        switch (rotate) {
+            case 0:
+                mode = kRotate0;
+                break;
+            case 90:
+                mode = kRotate90;
+                break;
+            case 180:
+                mode = kRotate180;
+                break;
+            case 270:
+                mode = kRotate270;
+                break;
+        }
+        I420Rotate(dst_y, dst_stride_y,
+                   dst_u, dst_stride_u,
+                   dst_v, dst_stride_v,
+                   dst_y1, dst_stride_y1,
+                   dst_u1, dst_stride_u1,
+                   dst_v1, dst_stride_v1,
+                   width, height,
+                   mode
+        );
+        delete[]output;
+        LOGD("yuv420spToYuv420p success");
+    }
 }

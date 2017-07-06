@@ -25,6 +25,11 @@ JNI(void, nv21ToYv12)(JNIEnv *env, jclass type,
                       jint height, jbyteArray dest_,
                       jint destWidth, jint destHeight,
                       jint rotate);
+JNI(void, nv21ToI420)(JNIEnv *env, jclass type,
+                      jbyteArray src_, jint width,
+                      jint height, jbyteArray dest_,
+                      jint destWidth, jint destHeight,
+                      jint rotate);
 }
 
 #endif

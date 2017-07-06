@@ -32,6 +32,10 @@ namespace video {
     nv21ToYv12(unsigned char *yuv, int width, int height, unsigned char *yuv420p,
                int dest_width,
                int dest_height, int rotate);
+    void
+    nv21ToI420(unsigned char *yuv, int width, int height, unsigned char *yuv420p,
+               int dest_width,
+               int dest_height, int rotate);
 
 }
 

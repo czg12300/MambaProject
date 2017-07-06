@@ -5,8 +5,9 @@ import android.opengl.GLSurfaceView;
 
 import com.mamba.gloable.FolderManager;
 import com.mamba.model.record.camera.CameraImp;
-import com.mamba.model.record.encode.VideoCodecHolder;
-import com.mamba.model.record.encode.VideoCodecParameters;
+import com.mamba.model.record.encode.JakeMediaRecorder;
+import com.mamba.model.record.encode.video.VideoCodecHolder;
+import com.mamba.model.record.encode.video.VideoCodecParameters;
 import com.mamba.model.record.randerer.CameraRenderer;
 import com.mamba.model.record.randerer.gpuimage.filter.GPUImageFilter;
 
@@ -20,35 +21,41 @@ import java.io.IOException;
  */
 
 public class RecordHolder {
-//    private static final int OUT_WIDTH = 1280;
+    //    private static final int OUT_WIDTH = 1280;
 //    private static final int OUT_HEIGHT = 720;
     private static final int OUT_WIDTH = 720;
     private static final int OUT_HEIGHT = 1280;
     private static final int PREVIEW_WIDTH = 1280;
     private static final int PREVIEW_HEIGHT = 720;
     private CameraRenderer cameraRenderer;
-    private VideoCodecHolder videoCodecHolder;
+    private JakeMediaRecorder mediaRecorder;
 
     public RecordHolder() {
         cameraRenderer = new CameraRenderer();
-        videoCodecHolder = new VideoCodecHolder();
-        cameraRenderer.setFrameAvailableListener(videoCodecHolder);
+        mediaRecorder = new JakeMediaRecorder();
+        cameraRenderer.setFrameAvailableListener(mediaRecorder.getFrameAvailableListener());
     }
 
     private VideoCodecParameters createVideoCodecParameters() {
         return VideoCodecParameters.VideoCodecParametersBuilder.create()
-                .setBitRate((int) (2.0 * 1024 *1024))
+                .setBitRate((int) (2.0 * 1024 * 1024))
                 .setCodecType(VideoCodecParameters.CodecType.H264)
                 .setFrameRate(25)
+                .setSpeedFrameRate(25)
                 .setKeyIFrameInterval(4)
                 .setWidth(OUT_WIDTH)
                 .setHeight(OUT_HEIGHT)
-                .setOutFile(getOutFile())
+                .setOutFile(getOutH264())
                 .build();
     }
 
     private String getOutFile() {
         String file = FolderManager.ROOT_FOLDER + System.currentTimeMillis() + ".mp4";
+        return file;
+    }
+
+    private String getOutH264() {
+        String file = FolderManager.ROOT_FOLDER + System.currentTimeMillis() + ".h264";
         return file;
     }
 
@@ -73,19 +80,10 @@ public class RecordHolder {
     }
 
     public void startEncode() {
-        try {
-            videoCodecHolder.start(createVideoCodecParameters());
-            videoCodecHolder.setPositionFrameRate(25);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        mediaRecorder.start(getOutFile(), createVideoCodecParameters(), null);
     }
 
     public void stopEncode() {
-        try {
-            videoCodecHolder.stop();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        mediaRecorder.stop();
     }
 }

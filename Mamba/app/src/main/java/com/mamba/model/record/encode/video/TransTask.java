@@ -1,4 +1,4 @@
-package com.mamba.model.record.encode;
+package com.mamba.model.record.encode.video;
 
 import com.framework.ndk.videoutils.PixelTransUtils;
 import com.mamba.model.VLog;
@@ -20,8 +20,10 @@ public class TransTask extends Thread {
     private Callback callback;
     private int outWidth;
     private int outHeight;
+    private VideoEncoder.VideoEncoderType type;
 
-    public TransTask() {
+    public TransTask(VideoEncoder.VideoEncoderType type) {
+        this.type = type;
         mRawList = new LinkedBlockingQueue<>();
     }
 
@@ -105,7 +107,11 @@ public class TransTask extends Thread {
     private void trans(VideoFrame frame) {
         byte[] dataYuv = new byte[outWidth * outHeight * 3 / 2];
         long time = System.currentTimeMillis();
-        PixelTransUtils.nv21ToYv12(frame.data, frame.width, frame.height, dataYuv, outWidth, outHeight, frame.rotate);
+        if (type == VideoEncoder.VideoEncoderType.MEDIA_CODEC) {
+            PixelTransUtils.nv21ToYv12(frame.data, frame.width, frame.height, dataYuv, outWidth, outHeight, frame.rotate);
+        } else {
+            PixelTransUtils.nv21ToI420(frame.data, frame.width, frame.height, dataYuv, outWidth, outHeight, frame.rotate);
+        }
         long timea = System.currentTimeMillis();
         VLog.d("trans   time=" + (timea - time));
         frame.data = dataYuv;

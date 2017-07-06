@@ -13,7 +13,7 @@ struct fields_t {
     jclass clazz;
     jfieldID context;
 };
-#define JNI(rettype, name) JNIEXPORT rettype JNICALL Java_com_kugou_showguys_video_record_videocodec_FfmpegVideoCodec_##name
+#define JNI(rettype, name) JNIEXPORT rettype JNICALL Java_com_framework_ndk_videoutils_FfmpegEncoder_##name
 //JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved);
 JNI(jint, nativeStart)(JNIEnv *env, jobject obj, jstring file_, jint codecType,
                        jint keyIFrameInterval,

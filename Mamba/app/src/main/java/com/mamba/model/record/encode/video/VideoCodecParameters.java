@@ -1,4 +1,4 @@
-package com.mamba.model.record.encode;
+package com.mamba.model.record.encode.video;
 
 /**
  * 视频的编码的参数
@@ -13,6 +13,7 @@ public class VideoCodecParameters {
     }
 
     public int frameRate;
+    public int speedFrameRate;
     public int bitRate;
     public CodecType codecType;
     public int width = 0;
@@ -50,6 +51,11 @@ public class VideoCodecParameters {
 
         public VideoCodecParametersBuilder setFrameRate(int frameRate) {
             parameters.frameRate = frameRate;
+            return this;
+        }
+
+        public VideoCodecParametersBuilder setSpeedFrameRate(int speedFrameRate) {
+            parameters.speedFrameRate = speedFrameRate;
             return this;
         }
 
