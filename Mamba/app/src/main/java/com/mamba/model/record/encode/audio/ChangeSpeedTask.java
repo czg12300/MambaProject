@@ -13,7 +13,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  * @since 2017/7/10 下午3:37
  */
 
-public class ChangeSpeedTask extends Thread {
+public class ChangeSpeedTask implements Runnable {
     private volatile boolean isRunning = false;
     private volatile boolean isFinished = false;
     private Queue<AudioFrame> mRawList;
@@ -38,19 +38,10 @@ public class ChangeSpeedTask extends Thread {
         isRunning = true;
         mSoundTouchUtils.init();
         mSoundTouchUtils.setRateChange(speed);
-        super.start();
         isFinished = false;
+        new Thread(this).start();
     }
 
-    @Deprecated
-    @Override
-    public synchronized void start() {
-    }
-
-    public void setOutputSize(int outWidth, int outHeight) {
-        this.outWidth = outWidth;
-        this.outHeight = outHeight;
-    }
 
     public void addRawData(AudioFrame frame) {
         if (!isRunning || frame == null) {
@@ -73,7 +64,6 @@ public class ChangeSpeedTask extends Thread {
 
     @Override
     public void run() {
-        super.run();
         while (true) {
             AudioFrame frame = null;
             if (mRawList != null) {
@@ -85,7 +75,7 @@ public class ChangeSpeedTask extends Thread {
                 trans(frame);
             } else {
                 try {
-                    sleep(10);
+                    Thread.sleep(10);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

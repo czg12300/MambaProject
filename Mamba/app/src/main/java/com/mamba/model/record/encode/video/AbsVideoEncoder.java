@@ -12,7 +12,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  * @since 2017/6/30 上午11:06
  */
 
-public abstract class AbsVideoEncoder extends Thread implements VideoEncoder, TransTask.Callback {
+public abstract class AbsVideoEncoder implements VideoEncoder, Runnable, TransTask.Callback {
     private volatile boolean isRunning = false;
     private volatile boolean isFinished = false;
     private volatile boolean isTransFinished = false;
@@ -29,18 +29,12 @@ public abstract class AbsVideoEncoder extends Thread implements VideoEncoder, Tr
     protected abstract VideoEncoderType getVideoEncoderType();
 
 
-    @Deprecated
-    @Override
-    public synchronized void start() {
-    }
-
     public synchronized boolean isRunning() {
         return isRunning;
     }
 
     @Override
     public void run() {
-        super.run();
         if (callback != null) {
             callback.onStart();
         }
@@ -55,7 +49,7 @@ public abstract class AbsVideoEncoder extends Thread implements VideoEncoder, Tr
                 encode(frame);
             } else {
                 try {
-                    sleep(30);
+                    Thread.sleep(30);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -127,9 +121,9 @@ public abstract class AbsVideoEncoder extends Thread implements VideoEncoder, Tr
         isRunning = true;
         transTask.setOutputSize(parameters.width, parameters.height);
         transTask.startTask();
-        super.start();
         isFinished = false;
         isTransFinished = false;
+        new Thread(this).start();
     }
 
     @Override

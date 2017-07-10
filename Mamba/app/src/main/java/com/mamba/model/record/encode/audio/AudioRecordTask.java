@@ -4,6 +4,8 @@ import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 
+import com.mamba.model.VLog;
+
 import java.nio.ByteBuffer;
 
 /**
@@ -13,7 +15,7 @@ import java.nio.ByteBuffer;
  * @since 2017/7/6 下午4:38
  */
 
-public class AudioRecordTask extends Thread {
+public class AudioRecordTask implements Runnable {
     private AudioRecordCallback audioFrameCallback;
     private AudioRecord mRecord;
     private volatile boolean isStop = false;
@@ -33,14 +35,10 @@ public class AudioRecordTask extends Thread {
     public AudioRecordTask() {
     }
 
-    @Deprecated
-    @Override
-    public synchronized void start() {
-    }
 
     public synchronized void startTask() {
         isStop = false;
-        super.start();
+       new Thread(this).start();
     }
 
     public synchronized void stopTask() {
@@ -49,7 +47,6 @@ public class AudioRecordTask extends Thread {
 
     @Override
     public void run() {
-        super.run();
         android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
         prepare();
         if (mRecord != null) {
@@ -98,6 +95,7 @@ public class AudioRecordTask extends Thread {
                     mRecord = new AudioRecord(
                             source, SAMPLE_RATE,
                             channelLayout, audioFormat, buffer_size);
+                    VLog.d("mRecord  getChannelCount"+mRecord.getChannelCount());
                     if (mRecord.getState() != AudioRecord.STATE_INITIALIZED) {
                         mRecord = null;
                     }

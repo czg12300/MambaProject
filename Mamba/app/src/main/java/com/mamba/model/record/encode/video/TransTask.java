@@ -13,7 +13,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  * @since 2017/6/30 上午10:23
  */
 
-public class TransTask extends Thread {
+public class TransTask implements Runnable {
     private volatile boolean isRunning = false;
     private volatile boolean isFinished = false;
     private Queue<VideoFrame> mRawList;
@@ -36,14 +36,10 @@ public class TransTask extends Thread {
             mRawList.clear();
         }
         isRunning = true;
-        super.start();
         isFinished = false;
+        new Thread(this).start();
     }
 
-    @Deprecated
-    @Override
-    public synchronized void start() {
-    }
 
     public void setOutputSize(int outWidth, int outHeight) {
         this.outWidth = outWidth;
@@ -71,7 +67,6 @@ public class TransTask extends Thread {
 
     @Override
     public void run() {
-        super.run();
         while (true) {
             VideoFrame frame = null;
             if (mRawList != null) {
@@ -83,7 +78,7 @@ public class TransTask extends Thread {
                 trans(frame);
             } else {
                 try {
-                    sleep(30);
+                    Thread.sleep(30);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

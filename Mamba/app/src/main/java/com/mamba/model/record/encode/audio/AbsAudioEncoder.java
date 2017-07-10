@@ -16,7 +16,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  * @since 2017/6/30 上午11:06
  */
 
-public abstract class AbsAudioEncoder extends Thread implements AudioEncoder, ChangeSpeedTask.Callback {
+public abstract class AbsAudioEncoder  implements AudioEncoder,Runnable, ChangeSpeedTask.Callback {
     private volatile boolean isRunning = false;
     private volatile boolean isFinished = false;
     private volatile boolean isTransFinished = false;
@@ -29,10 +29,6 @@ public abstract class AbsAudioEncoder extends Thread implements AudioEncoder, Ch
 
     }
 
-    @Deprecated
-    @Override
-    public synchronized void start() {
-    }
 
     public synchronized boolean isRunning() {
         return isRunning;
@@ -40,7 +36,6 @@ public abstract class AbsAudioEncoder extends Thread implements AudioEncoder, Ch
 
     @Override
     public void run() {
-        super.run();
         if (callback != null) {
             callback.onStart();
         }
@@ -55,7 +50,7 @@ public abstract class AbsAudioEncoder extends Thread implements AudioEncoder, Ch
                 encode(frame);
             } else {
                 try {
-                    sleep(30);
+                    Thread. sleep(30);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -129,8 +124,8 @@ public abstract class AbsAudioEncoder extends Thread implements AudioEncoder, Ch
             changeSpeedTask.startTask(parameters.speed);
             isTransFinished = false;
         }
-        super.start();
         isFinished = false;
+        new Thread(this).start();
     }
 
     @Override
