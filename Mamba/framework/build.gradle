@@ -78,7 +78,7 @@ android {
     clean.dependsOn 'cleanNative'
 
     tasks.withType(JavaCompile) {
-        compileTask -> compileTask.dependsOn buildNative, copySo
+        compileTask -> compileTask.dependsOn buildNative
 
     }
 }

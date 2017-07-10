@@ -31,6 +31,10 @@ add_library(libyuv SHARED IMPORTED)
 set_target_properties( libyuv
                        PROPERTIES IMPORTED_LOCATION
                        ${lib_DIR}/libyuv.so )
+add_library(libsoundtouch SHARED IMPORTED)
+set_target_properties( libsoundtouch
+                       PROPERTIES IMPORTED_LOCATION
+                       ${lib_DIR}/libsoundtouch.so )
 
  file(GLOB video_encode_dir_src ${video_encode_dir}/*.cpp)
  file(GLOB video_format_dir_src ${video_format_dir}/*.cpp)
@@ -60,6 +64,7 @@ set_target_properties( libyuv
  target_link_libraries(libframework
                       libmbffmpeg
                       libyuv
+                      libsoundtouch
                       android
  					 ${ndk-lib}
  					  )

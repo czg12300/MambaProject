@@ -1,16 +1,14 @@
 package com.mamba.model.record.encode;
 
-import android.text.TextUtils;
-
 import com.framework.ndk.videoutils.FfmpegFormatUtils;
 import com.framework.utils.FileUtil;
+import com.mamba.model.record.encode.audio.AudioCodecHolder;
 import com.mamba.model.record.encode.audio.AudioCodecParameters;
-import com.mamba.model.record.encode.video.IFrameAvailableListener;
+import com.mamba.model.record.encode.video.OnVideoFrameAvailableListener;
 import com.mamba.model.record.encode.video.VideoCodecHolder;
 import com.mamba.model.record.encode.video.VideoCodecParameters;
 import com.mamba.model.record.encode.video.VideoFrame;
 
-import java.io.File;
 import java.util.Vector;
 
 /**
@@ -24,21 +22,29 @@ public class JakeMediaRecorder {
     private String mOutVideo;
     private String mOutAudio;
     private boolean hasRecordAudio = false;
+    private AudioCodecHolder mAudioCodecHolder;
 
     public JakeMediaRecorder() {
         mVideoCodecHolder = new VideoCodecHolder();
+        mAudioCodecHolder = new AudioCodecHolder();
     }
 
     public void start(String outFile, VideoCodecParameters videoCodecParameters, AudioCodecParameters audioCodecParameters) {
         mOutFile = outFile;
         mOutVideo = videoCodecParameters.outFile;
-        mOutAudio = videoCodecParameters.outFile;
+        mOutAudio = audioCodecParameters.outFile;
         mVideoCodecHolder.start(videoCodecParameters);
         mVideoCodecHolder.setRecorderCallback(recorderCallback);
+        if (audioCodecParameters != null) {
+            mAudioCodecHolder.start(audioCodecParameters);
+            mAudioCodecHolder.setRecorderCallback(recorderCallback);
+        }
+
     }
 
     public void stop() {
         mVideoCodecHolder.stop();
+        mAudioCodecHolder.stop();
     }
 
     private RecorderCallback recorderCallback = new RecorderCallback() {
@@ -75,7 +81,7 @@ public class JakeMediaRecorder {
             }
         }
     };
-    private IFrameAvailableListener frameAvailableListener = new IFrameAvailableListener() {
+    private OnVideoFrameAvailableListener frameAvailableListener = new OnVideoFrameAvailableListener() {
         @Override
         public void onFrameAvailable(VideoFrame frame) {
             if (mVideoCodecHolder != null) {
@@ -84,7 +90,7 @@ public class JakeMediaRecorder {
         }
     };
 
-    public IFrameAvailableListener getFrameAvailableListener() {
+    public OnVideoFrameAvailableListener getFrameAvailableListener() {
         return frameAvailableListener;
     }
 

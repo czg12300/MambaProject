@@ -8,7 +8,7 @@ import android.opengl.GLSurfaceView;
 import com.mamba.model.VLog;
 import com.mamba.model.record.camera.CameraImp;
 import com.mamba.model.record.camera.CameraImpFactory;
-import com.mamba.model.record.encode.video.IFrameAvailableListener;
+import com.mamba.model.record.encode.video.OnVideoFrameAvailableListener;
 import com.mamba.model.record.encode.video.VideoFrame;
 import com.mamba.model.record.randerer.gpuimage.OpenGlUtils;
 import com.mamba.model.record.randerer.gpuimage.Rotation;
@@ -40,7 +40,7 @@ public class CameraRenderer implements GLSurfaceView.Renderer, CameraImp.CameraI
     private final CameraInputFilter mCameraInputFilter;
     private SurfaceTexture mSurfaceTexture;
     private boolean mIsSurfaceCreated = false;
-    private IFrameAvailableListener frameAvailableListener;
+    private OnVideoFrameAvailableListener frameAvailableListener;
 
     public boolean isSurfaceCreated() {
         return mIsSurfaceCreated;
@@ -247,7 +247,7 @@ public class CameraRenderer implements GLSurfaceView.Renderer, CameraImp.CameraI
 
     }
 
-    public void setFrameAvailableListener(IFrameAvailableListener frameAvailableListener) {
+    public void setFrameAvailableListener(OnVideoFrameAvailableListener frameAvailableListener) {
         this.frameAvailableListener = frameAvailableListener;
     }
 

@@ -22,49 +22,49 @@ public class VideoCodecParameters {
     public int keyIFrameInterval = 1;
     public String outFile;
 
-    public static class VideoCodecParametersBuilder {
+    public static class Builder {
         private VideoCodecParameters parameters;
 
-        private VideoCodecParametersBuilder() {
+        private Builder() {
             parameters = new VideoCodecParameters();
         }
 
-        public VideoCodecParametersBuilder setOutFile(String resultFile) {
+        public Builder setOutFile(String resultFile) {
             parameters.outFile = resultFile;
             return this;
         }
 
-        public VideoCodecParametersBuilder setHeight(int height) {
+        public Builder setHeight(int height) {
             parameters.height = height;
             return this;
         }
 
-        public VideoCodecParametersBuilder setKeyIFrameInterval(int minils) {
+        public Builder setKeyIFrameInterval(int minils) {
             parameters.keyIFrameInterval = minils;
             return this;
         }
 
-        public VideoCodecParametersBuilder setWidth(int width) {
+        public Builder setWidth(int width) {
             parameters.width = width;
             return this;
         }
 
-        public VideoCodecParametersBuilder setFrameRate(int frameRate) {
+        public Builder setFrameRate(int frameRate) {
             parameters.frameRate = frameRate;
             return this;
         }
 
-        public VideoCodecParametersBuilder setSpeedFrameRate(int speedFrameRate) {
+        public Builder setSpeedFrameRate(int speedFrameRate) {
             parameters.speedFrameRate = speedFrameRate;
             return this;
         }
 
-        public VideoCodecParametersBuilder setBitRate(int bitRate) {
+        public Builder setBitRate(int bitRate) {
             parameters.bitRate = bitRate;
             return this;
         }
 
-        public VideoCodecParametersBuilder setCodecType(CodecType codecType) {
+        public Builder setCodecType(CodecType codecType) {
             parameters.codecType = codecType;
             return this;
         }
@@ -73,8 +73,8 @@ public class VideoCodecParameters {
             return parameters;
         }
 
-        public static VideoCodecParametersBuilder create() {
-            return new VideoCodecParametersBuilder();
+        public static Builder create() {
+            return new Builder();
         }
     }
 }

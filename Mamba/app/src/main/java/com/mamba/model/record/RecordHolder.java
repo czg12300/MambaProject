@@ -6,12 +6,10 @@ import android.opengl.GLSurfaceView;
 import com.mamba.gloable.FolderManager;
 import com.mamba.model.record.camera.CameraImp;
 import com.mamba.model.record.encode.JakeMediaRecorder;
-import com.mamba.model.record.encode.video.VideoCodecHolder;
+import com.mamba.model.record.encode.audio.AudioCodecParameters;
 import com.mamba.model.record.encode.video.VideoCodecParameters;
 import com.mamba.model.record.randerer.CameraRenderer;
 import com.mamba.model.record.randerer.gpuimage.filter.GPUImageFilter;
-
-import java.io.IOException;
 
 /**
  * 处理视频录制的业务逻辑
@@ -37,7 +35,7 @@ public class RecordHolder {
     }
 
     private VideoCodecParameters createVideoCodecParameters() {
-        return VideoCodecParameters.VideoCodecParametersBuilder.create()
+        return VideoCodecParameters.Builder.create()
                 .setBitRate((int) (2.0 * 1024 * 1024))
                 .setCodecType(VideoCodecParameters.CodecType.H264)
                 .setFrameRate(25)
@@ -48,6 +46,14 @@ public class RecordHolder {
                 .setOutFile(getOutH264())
                 .build();
     }
+    private AudioCodecParameters createAudioCodecParameters() {
+        return AudioCodecParameters.Builder.create()
+                .setBitRate(57000)
+                .setChannelCount(1)
+                .setSampleRate(44100)
+                .setOutFile(getOutAudio())
+                .build();
+    }
 
     private String getOutFile() {
         String file = FolderManager.ROOT_FOLDER + System.currentTimeMillis() + ".mp4";
@@ -56,6 +62,10 @@ public class RecordHolder {
 
     private String getOutH264() {
         String file = FolderManager.ROOT_FOLDER + System.currentTimeMillis() + ".h264";
+        return file;
+    }
+    private String getOutAudio() {
+        String file = FolderManager.ROOT_FOLDER + System.currentTimeMillis() + ".aac";
         return file;
     }
 
@@ -80,7 +90,7 @@ public class RecordHolder {
     }
 
     public void startEncode() {
-        mediaRecorder.start(getOutFile(), createVideoCodecParameters(), null);
+        mediaRecorder.start(getOutFile(), createVideoCodecParameters(), createAudioCodecParameters());
     }
 
     public void stopEncode() {

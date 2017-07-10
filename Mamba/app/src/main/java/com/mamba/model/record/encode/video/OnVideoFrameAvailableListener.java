@@ -7,7 +7,7 @@ package com.mamba.model.record.encode.video;
  * @since 2017/6/30 下午2:32
  */
 
-public interface IFrameAvailableListener {
+public interface OnVideoFrameAvailableListener {
 
     void onFrameAvailable(VideoFrame frame);
 }
