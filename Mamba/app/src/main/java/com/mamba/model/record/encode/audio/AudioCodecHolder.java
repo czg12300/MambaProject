@@ -2,6 +2,7 @@ package com.mamba.model.record.encode.audio;
 
 import android.os.Build;
 
+import com.mamba.model.VLog;
 import com.mamba.model.record.encode.RecorderCallback;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -23,7 +24,7 @@ public class AudioCodecHolder {
     private AudioRecordTask mAudioRecordTask;
     private AudioEncoder mEncoder;
 
-    public void start(AudioCodecParameters audioCodecParameters) {
+    public AudioCodecHolder() {
         mAudioRecordTask = new AudioRecordTask();
         mAudioRecordTask.setAudioFrameCallback(audioRecordCallback);
         boolean isUseFfmpeg = Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN || !isSupportMediaCodec() || false;
@@ -34,8 +35,10 @@ public class AudioCodecHolder {
             mEncoder = new MediaCodecAudioEncoder();
         }
         mEncoder.setCallback(callback);
-        mEncoder.startEncode(audioCodecParameters);
-        mAudioRecordTask.startTask();
+    }
+
+    public void start(AudioCodecParameters audioCodecParameters) {
+        mAudioRecordTask.startTask(audioCodecParameters);
     }
 
     public void setRecorderCallback(RecorderCallback recorderCallback) {
@@ -52,6 +55,7 @@ public class AudioCodecHolder {
 
         @Override
         public void onStop() {
+            VLog.d("onStop   AudioEncoder.Callback ");
             if (recorderCallback != null) {
                 recorderCallback.onStop();
             }
@@ -60,13 +64,14 @@ public class AudioCodecHolder {
 
     private AudioRecordCallback audioRecordCallback = new AudioRecordCallback() {
         @Override
-        public void onStart() {
-
+        public void onStart(AudioCodecParameters audioCodecParameters) {
+            if (mEncoder != null) {
+                mEncoder.startEncode(audioCodecParameters);
+            }
         }
 
         @Override
         public void onFrameAvailable(byte[] data) {
-
             if (mEncoder != null && data != null) {
                 mEncoder.offerRawFrame(AudioFrame.create(data, data.length));
             }

@@ -1,6 +1,8 @@
 package com.mamba.model.record;
 
 import android.graphics.ImageFormat;
+import android.media.AudioFormat;
+import android.media.MediaRecorder;
 import android.opengl.GLSurfaceView;
 
 import com.mamba.gloable.FolderManager;
@@ -46,10 +48,14 @@ public class RecordHolder {
                 .setOutFile(getOutH264())
                 .build();
     }
+
     private AudioCodecParameters createAudioCodecParameters() {
         return AudioCodecParameters.Builder.create()
-                .setBitRate(57000)
-                .setChannelCount(1)
+                .setBitRate(96000)
+                .setAudioSource(MediaRecorder.AudioSource.MIC)
+                .setChannelLayout(AudioFormat.CHANNEL_IN_MONO)
+                .setAudioFormat(AudioFormat.ENCODING_PCM_16BIT)
+                .setSpeed(1.0f)
                 .setSampleRate(44100)
                 .setOutFile(getOutAudio())
                 .build();
@@ -64,6 +70,7 @@ public class RecordHolder {
         String file = FolderManager.ROOT_FOLDER + System.currentTimeMillis() + ".h264";
         return file;
     }
+
     private String getOutAudio() {
         String file = FolderManager.ROOT_FOLDER + System.currentTimeMillis() + ".aac";
         return file;

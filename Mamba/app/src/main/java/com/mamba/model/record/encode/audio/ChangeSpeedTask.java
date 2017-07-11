@@ -18,8 +18,6 @@ public class ChangeSpeedTask implements Runnable {
     private volatile boolean isFinished = false;
     private Queue<AudioFrame> mRawList;
     private Callback callback;
-    private int outWidth;
-    private int outHeight;
     private SoundTouchUtils mSoundTouchUtils;
 
     public ChangeSpeedTask() {
@@ -103,10 +101,8 @@ public class ChangeSpeedTask implements Runnable {
         byte[] result = new byte[frame.size];
         mSoundTouchUtils.getSampleByBytes(result, frame.size);
         frame.data = result;
-        byte[] dataYuv = new byte[outWidth * outHeight * 3 / 2];
         long timea = System.currentTimeMillis();
-        VLog.d("trans   time=" + (timea - time));
-        frame.data = dataYuv;
+        VLog.d("trans ChangeSpeedTask  time=" + (timea - time));
         if (callback != null) {
             callback.onTrans(frame);
         }

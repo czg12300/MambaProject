@@ -143,7 +143,7 @@ public class CameraRenderer implements GLSurfaceView.Renderer, CameraImp.CameraI
             id = mCameraInputFilter.onDrawToTexture(mTextureId);
             mFilter.onDrawFrame(id, mGLCubeBuffer, mGLTextureBuffer);
         }
-        VLog.d("onDrawFrame   timestamp  " + mSurfaceTexture.getTimestamp());
+//        VLog.d("onDrawFrame   timestamp  " + mSurfaceTexture.getTimestamp());
     }
 
     long lastTimes = 0;

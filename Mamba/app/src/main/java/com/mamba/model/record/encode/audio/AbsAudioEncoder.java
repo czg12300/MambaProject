@@ -16,7 +16,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  * @since 2017/6/30 上午11:06
  */
 
-public abstract class AbsAudioEncoder  implements AudioEncoder,Runnable, ChangeSpeedTask.Callback {
+public abstract class AbsAudioEncoder implements AudioEncoder, Runnable, ChangeSpeedTask.Callback {
     private volatile boolean isRunning = false;
     private volatile boolean isFinished = false;
     private volatile boolean isTransFinished = false;
@@ -50,14 +50,21 @@ public abstract class AbsAudioEncoder  implements AudioEncoder,Runnable, ChangeS
                 encode(frame);
             } else {
                 try {
-                    Thread. sleep(30);
+                    Thread.sleep(10);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
-            if (!isRunning && isTransFinished) {
-                break;
+            if (changeSpeedTask != null) {
+                if (!isRunning && isTransFinished) {
+                    break;
+                }
+            } else {
+                if (!isRunning) {
+                    break;
+                }
             }
+
         }
         while (mTransList.size() > 0) {
             AudioFrame frame = mTransList.poll();
@@ -65,11 +72,12 @@ public abstract class AbsAudioEncoder  implements AudioEncoder,Runnable, ChangeS
                 encode(frame);
             }
         }
+        stopAndReleaseEncoder();
+        isFinished = true;
+        changeSpeedTask = null;
         if (callback != null) {
             callback.onStop();
         }
-        stopAndReleaseEncoder();
-        isFinished = true;
     }
 
     protected abstract void stopAndReleaseEncoder();

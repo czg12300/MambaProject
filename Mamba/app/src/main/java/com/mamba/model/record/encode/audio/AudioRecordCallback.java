@@ -8,7 +8,7 @@ package com.mamba.model.record.encode.audio;
  */
 
 public interface AudioRecordCallback {
-    void onStart();
+    void onStart(AudioCodecParameters audioCodecParameters);
 
     void onFrameAvailable(byte[] data);
 

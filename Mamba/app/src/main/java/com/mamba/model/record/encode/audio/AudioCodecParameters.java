@@ -1,5 +1,8 @@
 package com.mamba.model.record.encode.audio;
 
+import android.media.AudioFormat;
+import android.media.MediaRecorder;
+
 import com.mamba.model.record.encode.video.VideoCodecParameters;
 
 /**
@@ -13,6 +16,9 @@ public class AudioCodecParameters {
     public int channelCount;
     public int bitRate;
     public int sampleRate;
+    public int audioFormat = AudioFormat.ENCODING_PCM_16BIT;
+    public int audioSource = MediaRecorder.AudioSource.MIC;
+    public int channelLayout = AudioFormat.CHANNEL_IN_MONO;
     public String outFile;
     public float speed = 1;
 
@@ -28,18 +34,27 @@ public class AudioCodecParameters {
             return this;
         }
 
-        public Builder setChannelCount(int channelCount) {
-            parameters.channelCount = channelCount;
-            return this;
-        }
-
         public Builder setSampleRate(int sampleRate) {
             parameters.sampleRate = sampleRate;
             return this;
         }
 
-        public Builder setSpeed(int speed) {
+        public Builder setSpeed(float speed) {
             parameters.speed = speed;
+            return this;
+        }
+
+        public Builder setAudioFormat(int audioFormat) {
+            parameters.audioFormat = audioFormat;
+            return this;
+        }
+
+        public Builder setAudioSource(int audioSource) {
+            parameters.audioSource = audioSource;
+            return this;
+        }
+        public Builder setChannelLayout(int channelLayout) {
+            parameters.channelLayout = channelLayout;
             return this;
         }
 

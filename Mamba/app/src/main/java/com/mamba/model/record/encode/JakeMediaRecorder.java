@@ -2,6 +2,7 @@ package com.mamba.model.record.encode;
 
 import com.framework.ndk.videoutils.FfmpegFormatUtils;
 import com.framework.utils.FileUtil;
+import com.mamba.model.VLog;
 import com.mamba.model.record.encode.audio.AudioCodecHolder;
 import com.mamba.model.record.encode.audio.AudioCodecParameters;
 import com.mamba.model.record.encode.video.OnVideoFrameAvailableListener;
@@ -12,6 +13,8 @@ import com.mamba.model.record.encode.video.VideoFrame;
 import java.util.Vector;
 
 /**
+ * 视频录制器
+ *
  * @author jake
  * @since 2017/7/6 上午10:31
  */
@@ -26,7 +29,9 @@ public class JakeMediaRecorder {
 
     public JakeMediaRecorder() {
         mVideoCodecHolder = new VideoCodecHolder();
+        mVideoCodecHolder.setRecorderCallback(recorderCallback);
         mAudioCodecHolder = new AudioCodecHolder();
+        mAudioCodecHolder.setRecorderCallback(recorderCallback);
     }
 
     public void start(String outFile, VideoCodecParameters videoCodecParameters, AudioCodecParameters audioCodecParameters) {
@@ -34,10 +39,11 @@ public class JakeMediaRecorder {
         mOutVideo = videoCodecParameters.outFile;
         mOutAudio = audioCodecParameters.outFile;
         mVideoCodecHolder.start(videoCodecParameters);
-        mVideoCodecHolder.setRecorderCallback(recorderCallback);
         if (audioCodecParameters != null) {
+            hasRecordAudio = true;
             mAudioCodecHolder.start(audioCodecParameters);
-            mAudioCodecHolder.setRecorderCallback(recorderCallback);
+        } else {
+            hasRecordAudio = false;
         }
 
     }

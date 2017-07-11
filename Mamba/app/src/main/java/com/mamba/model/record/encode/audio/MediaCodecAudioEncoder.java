@@ -48,14 +48,16 @@ public class MediaCodecAudioEncoder extends AbsAudioEncoder {
             ByteBuffer inputBuffer = inputBuffers[inputBufferIndex];
             inputBuffer.clear();
             inputBuffer.put(frame.data);
-            mediaCodec.queueInputBuffer(inputBufferIndex, 0, frame.size, System.nanoTime() / 1000, 0);
+            mediaCodec.queueInputBuffer(inputBufferIndex, 0, frame.size, System.nanoTime(), 0);
         }
         MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
         int outputBufferIndex = mediaCodec.dequeueOutputBuffer(bufferInfo, 0);
         while (outputBufferIndex >= 0) {
             ByteBuffer outputBuffer = outputBuffers[outputBufferIndex];
-            byte[] outData = new byte[bufferInfo.size];
-            outputBuffer.get(outData);
+            int len = bufferInfo.size + 7;
+            byte[] outData = new byte[len];
+            addADTStoPacket(outData, len);
+            outputBuffer.get(outData, 7, bufferInfo.size);
             try {
                 mOutput.write(outData);
             } catch (Exception e) {
@@ -73,10 +75,8 @@ public class MediaCodecAudioEncoder extends AbsAudioEncoder {
         boolean isSuccess = false;
         try {
             mediaCodec = MediaCodec.createEncoderByType(MINE_TYPE);
-            MediaFormat mediaFormat = MediaFormat.createAudioFormat(MINE_TYPE, 44100, 1);
+            MediaFormat mediaFormat = MediaFormat.createAudioFormat(MINE_TYPE, parameters.sampleRate, parameters.channelCount);
             mediaFormat.setInteger(MediaFormat.KEY_BIT_RATE, parameters.bitRate);
-            mediaFormat.setInteger(MediaFormat.KEY_SAMPLE_RATE, parameters.sampleRate);
-            mediaFormat.setInteger(MediaFormat.KEY_CHANNEL_COUNT, parameters.channelCount);
             mediaCodec.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
             mediaCodec.start();
         } catch (IOException e) {
@@ -91,5 +91,24 @@ public class MediaCodecAudioEncoder extends AbsAudioEncoder {
         }
         isSuccess = true;
         return isSuccess;
+    }
+
+    /**
+     * 给编码出的aac裸流添加adts头字段
+     *
+     * @param packet    要空出前7个字节，否则会搞乱数据
+     * @param packetLen
+     */
+    private void addADTStoPacket(byte[] packet, int packetLen) {
+        int profile = 2;  //AAC LC
+        int freqIdx = 4;  //44.1KHz
+        int chanCfg = 2;  //CPE
+        packet[0] = (byte) 0xFF;
+        packet[1] = (byte) 0xF9;
+        packet[2] = (byte) (((profile - 1) << 6) + (freqIdx << 2) + (chanCfg >> 2));
+        packet[3] = (byte) (((chanCfg & 3) << 6) + (packetLen >> 11));
+        packet[4] = (byte) ((packetLen & 0x7FF) >> 3);
+        packet[5] = (byte) (((packetLen & 7) << 5) + 0x1F);
+        packet[6] = (byte) 0xFC;
     }
 }
