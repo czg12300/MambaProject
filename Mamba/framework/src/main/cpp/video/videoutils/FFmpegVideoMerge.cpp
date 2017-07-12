@@ -100,6 +100,9 @@ namespace video {
         bool isFirst = true;
         int pts_v = 0, pts_a = 0, dts_v = 0, dts_a = 0;
         int pts_v_last = 0, pts_a_last = 0, dts_v_last = 0, dts_a_last = 0;
+        AVFormatContext *tmp;
+        int video_stream_index;
+        int audio_stream_index;
         LOGD("mergeVideo srcFiles.size()=%d", srcFiles.size());
         if (srcFiles.empty()) {
             return -1;
@@ -117,29 +120,36 @@ namespace video {
                                                              NULL, 0);
                 if (audio_stream_index != -1 && audio_stream_index != AVERROR_STREAM_NOT_FOUND) {
                     input_ctx = ac;
+                    LOGD("mergeVideo audio_stream_index = %d", audio_stream_index);
                 }
+                tmp = ac;
                 inputCtxs->push(ac);
             } else {
                 LOGE("open_input result:%d", result);
                 goto end;
             }
         }
+        LOGD("mergeVideo  00000000000000");
+
+        if (input_ctx == NULL) {
+            input_ctx = tmp;
+        }
+
         if (0 > (result = open_output(input_ctx, &output_ctx, outFile))) {
             LOGI("open_output result:%d", result);
             goto end;
         }
+        LOGD("mergeVideo  111111111111111");
         input_ctx = inputCtxs->front();
         inputCtxs->pop();
+        video_stream_index = av_find_best_stream(input_ctx, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
+        audio_stream_index = av_find_best_stream(input_ctx, AVMEDIA_TYPE_AUDIO, -1, -1, NULL, 0);
         while (1) {
-            int video_stream_index = av_find_best_stream(input_ctx, AVMEDIA_TYPE_VIDEO, -1, -1,
-                                                         NULL, 0);
-            int audio_stream_index = av_find_best_stream(input_ctx, AVMEDIA_TYPE_AUDIO, -1, -1,
-                                                         NULL, 0);
             if (0 > av_read_frame(input_ctx, &pkt)) {
                 pts_v = pts_v_last + 1;
+                dts_v = dts_v_last + 1;
                 pts_a = pts_a_last + 1;
                 dts_a = dts_a_last + 1;
-                dts_v = dts_v_last + 1;
                 LOGD(" pts_v %d  pts_a %d", pts_v, pts_a);
                 if (audio_stream_index != AVERROR_STREAM_NOT_FOUND) {
                     if (pts_v > pts_a) {
@@ -153,48 +163,60 @@ namespace video {
                     isFirst = false;
                     input_ctx = inputCtxs->front();
                     inputCtxs->pop();
+                    video_stream_index = av_find_best_stream(input_ctx, AVMEDIA_TYPE_VIDEO, -1, -1,
+                                                             NULL, 0);
+                    audio_stream_index = av_find_best_stream(input_ctx, AVMEDIA_TYPE_AUDIO, -1, -1,
+                                                             NULL, 0);
                 } else {
                     break;
                 }
-            }
-            if (pkt.stream_index == video_stream_index) {
-                if (!isFirst) {
-                    pkt.pts += pts_v;
-                    pkt.dts += dts_v;
-                } else {
-                    pts_v = pkt.pts;
-                    dts_v = pkt.dts;
+            } else {
+
+                //LOGD("mergeVideo000 pkt = %lld", pkt.pts);
+                //LOGD("mergeVideo000 dts = %lld", pkt.dts);
+                if (pkt.stream_index == video_stream_index) {
+                    if (!isFirst) {
+                        pkt.pts += pts_v;
+                        pkt.dts += dts_v;
+                    } else {
+                        pts_v = pkt.pts;
+                        dts_v = pkt.dts;
+                    }
+                    pts_v_last = pkt.pts;
+                    dts_v_last = pkt.dts;
+                } else if (pkt.stream_index == audio_stream_index) {
+                    if (!isFirst) {
+                        pkt.pts += pts_a;
+                        pkt.dts += dts_a;
+                    } else {
+                        pts_a = pkt.pts;
+                        dts_a = pkt.dts;
+                    }
+                    pts_a_last = pkt.pts;
+                    dts_a_last = pkt.dts;
                 }
-                pts_v_last = pkt.pts;
-                dts_v_last = pkt.dts;
-            } else if (pkt.stream_index == audio_stream_index) {
-                if (!isFirst) {
-                    pkt.pts += pts_a;
-                    pkt.dts += dts_a;
-                } else {
-                    pts_a = pkt.pts;
-                    dts_a = pkt.dts;
+                pkt.pts = av_rescale_q_rnd(pkt.pts, input_ctx->streams[pkt.stream_index]->time_base,
+                                           output_ctx->streams[pkt.stream_index]->time_base,
+                                           (AVRounding) (AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
+                pkt.dts = av_rescale_q_rnd(pkt.dts, input_ctx->streams[pkt.stream_index]->time_base,
+                                           output_ctx->streams[pkt.stream_index]->time_base,
+                                           (AVRounding) (AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
+                pkt.duration = av_rescale_q(pkt.duration,
+                                            input_ctx->streams[pkt.stream_index]->time_base,
+                                            output_ctx->streams[pkt.stream_index]->time_base);
+                //LOGD("mergeVideo111 pkt = %lld", pkt.pts);
+                //LOGD("mergeVideo111 dts = %lld", pkt.dts);
+
+                int ret = av_interleaved_write_frame(output_ctx, &pkt);
+                if (ret < 0) {
+                    LOGE("Error muxing packet ret=%d pkt.streamIndex %d  video_stream_index  %d  audio_stream_index  %d   pkt.pts-pkt.dts  %lld ",
+                         ret, pkt.stream_index, video_stream_index, audio_stream_index,
+                         pkt.pts - pkt.dts);
+                    //break;
                 }
-                pts_a_last = pkt.pts;
-                dts_a_last = pkt.dts;
+                av_free_packet(&pkt);
             }
-            pkt.pts = av_rescale_q_rnd(pkt.pts, input_ctx->streams[pkt.stream_index]->time_base,
-                                       output_ctx->streams[pkt.stream_index]->time_base,
-                                       (AVRounding) (AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
-            pkt.dts = av_rescale_q_rnd(pkt.dts, input_ctx->streams[pkt.stream_index]->time_base,
-                                       output_ctx->streams[pkt.stream_index]->time_base,
-                                       (AVRounding) (AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
-            pkt.duration = av_rescale_q(pkt.duration,
-                                        input_ctx->streams[pkt.stream_index]->time_base,
-                                        output_ctx->streams[pkt.stream_index]->time_base);
-            int ret = av_interleaved_write_frame(output_ctx, &pkt);
-            if (ret < 0) {
-                LOGE("Error muxing packet ret=%d pkt.streamIndex %d  video_stream_index  %d  audio_stream_index  %d   pkt.pts-pkt.dts  %lld ",
-                     ret, pkt.stream_index, video_stream_index, audio_stream_index,
-                     pkt.pts - pkt.dts);
-                //break;
-            }
-            av_free_packet(&pkt);
+
         }
 
         av_write_trailer(output_ctx);
@@ -203,10 +225,8 @@ namespace video {
         end:
         free(inputCtxs);
         if (output_ctx && !(output_ctx->oformat->flags & AVFMT_NOFILE))
-            avio_close(output_ctx
-                               ->pb);
+            avio_close(output_ctx->pb);
         avformat_free_context(output_ctx);
-        return
-                result;
+        return result;
     }
 }
