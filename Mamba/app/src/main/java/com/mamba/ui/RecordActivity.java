@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -40,7 +41,7 @@ public class RecordActivity extends BaseActivity {
         checkAndRequestPermission(Manifest.permission.CAMERA, REQUEST_PERMISSION);
         findViewById(R.id.btn_record).setOnClickListener(onClickListener);
         findViewById(R.id.btn_toggle).setOnClickListener(onClickListener);
-        mRecordHolder = new RecordHolder();
+        mRecordHolder = new RecordHolder(this);
         mRecordHolder.setGlSurfaceView((GLSurfaceView) findViewById(R.id.gl_camera));
         mRecordHolder.setFilter(FilterFactory.getFilter(this, FilterType.BEAUTY));
     }
@@ -62,7 +63,7 @@ public class RecordActivity extends BaseActivity {
 
     private View.OnClickListener onClickListener = new View.OnClickListener() {
         @Override
-        public void onClick(View v) {
+        public void onClick(final View v) {
             switch (v.getId()) {
                 case R.id.btn_record:
                     if (v.isSelected()) {
@@ -73,6 +74,19 @@ public class RecordActivity extends BaseActivity {
                         ((TextView) v).setText("结束");
                         v.setSelected(true);
                         mRecordHolder.startEncode();
+                        new CountDownTimer(15000,1000){
+                            @Override
+                            public void onTick(long millisUntilFinished) {
+
+                            }
+
+                            @Override
+                            public void onFinish() {
+                                mRecordHolder.stopEncode();
+                                v.setSelected(false);
+                                ((TextView) v).setText("开始");
+                            }
+                        }.start();
                     }
                     break;
                 case R.id.btn_toggle:
@@ -83,4 +97,16 @@ public class RecordActivity extends BaseActivity {
             }
         }
     };
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mRecordHolder.resume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mRecordHolder.pause();
+    }
 }

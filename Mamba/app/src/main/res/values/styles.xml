@@ -8,4 +8,9 @@
         <item name="android:windowFullscreen">true</item>
     </style>
 
+    <style name="PopDialogTheme" parent="@android:style/Theme.Dialog">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsFloating">true</item>
+    </style>
 </resources>

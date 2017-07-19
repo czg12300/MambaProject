@@ -3,6 +3,7 @@ package com.mamba.model.record.encode.video;
 import android.os.Build;
 
 import com.mamba.model.VLog;
+import com.mamba.model.record.RecordHolder;
 import com.mamba.model.record.encode.RecorderCallback;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -27,9 +28,10 @@ public class VideoCodecHolder {
     private VideoCodecParameters mVideoCodecParameters;
     private VideoEncoder mEncoder;
     private RecorderCallback recorderCallback;
+    public static boolean useMediaCodec = true;
 
     public VideoCodecHolder() {
-        boolean isUseFfmpeg = Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN || !isSupportMediaCodec() || true;
+        boolean isUseFfmpeg = Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN || !isSupportMediaCodec() || useMediaCodec;
         if (isUseFfmpeg) {
             mEncoder = new FfmpegVideoEncoder();
         } else {

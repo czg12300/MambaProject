@@ -58,7 +58,9 @@ public class JakeMediaRecorder {
 
         @Override
         public void onStart() {
-
+            if (callback != null) {
+                callback.onStart();
+            }
         }
 
         @Override
@@ -77,12 +79,18 @@ public class JakeMediaRecorder {
                     if (!isSuccess) {
                         FileUtil.deleteFile(mOutFile);
                     }
+                    if (callback != null) {
+                        callback.onStop(isSuccess ? mOutFile : null, isSuccess);
+                    }
                 }
             } else {
                 boolean isSuccess = FfmpegFormatUtils.formatVideoStream(mOutVideo, mOutFile);
                 FileUtil.deleteFile(mOutVideo);
                 if (!isSuccess) {
                     FileUtil.deleteFile(mOutFile);
+                }
+                if (callback != null) {
+                    callback.onStop(isSuccess ? mOutFile : null, isSuccess);
                 }
             }
         }
@@ -100,4 +108,15 @@ public class JakeMediaRecorder {
         return frameAvailableListener;
     }
 
+    public Callback callback;
+
+    public void setCallback(Callback callback) {
+        this.callback = callback;
+    }
+
+    public static interface Callback {
+        void onStart();
+
+        void onStop(String outFile, boolean isSuccess);
+    }
 }

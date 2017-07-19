@@ -9,12 +9,12 @@
 
 
     <application
+        android:name=".MambaApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:name=".MambaApplication"
         android:theme="@style/AppTheme">
         <activity
             android:name=".SplashActivity"
@@ -29,6 +29,16 @@
             android:name=".ui.RecordActivity"
             android:screenOrientation="portrait"
             android:theme="@style/ActivityThemeFullScreen" />
+        <activity
+            android:name=".ui.PlayActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/ActivityThemeFullScreen" />
+        <activity
+            android:name=".ui.test.MainActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/ActivityThemeFullScreen">
+
+        </activity>
     </application>
 
 </manifest>

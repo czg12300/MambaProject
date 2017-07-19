@@ -122,7 +122,7 @@ public class MediaCodecEncoder extends AbsVideoEncoder {
     }
 
     private long computePresentationTime(long frameIndex) {
-        return frameIndex == 0 ? 0 : frameIndex * 1000000 / frameRate;
+        return 132 + frameIndex * 1000000 / frameRate;
     }
 
     @Override
