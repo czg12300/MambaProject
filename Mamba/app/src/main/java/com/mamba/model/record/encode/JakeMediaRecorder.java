@@ -37,9 +37,9 @@ public class JakeMediaRecorder {
     public void start(String outFile, VideoCodecParameters videoCodecParameters, AudioCodecParameters audioCodecParameters) {
         mOutFile = outFile;
         mOutVideo = videoCodecParameters.outFile;
-        mOutAudio = audioCodecParameters.outFile;
         mVideoCodecHolder.start(videoCodecParameters);
         if (audioCodecParameters != null) {
+            mOutAudio = audioCodecParameters.outFile;
             hasRecordAudio = true;
             mAudioCodecHolder.start(audioCodecParameters);
         } else {

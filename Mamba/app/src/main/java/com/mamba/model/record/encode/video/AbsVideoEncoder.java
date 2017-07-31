@@ -64,11 +64,11 @@ public abstract class AbsVideoEncoder implements VideoEncoder, Runnable, TransTa
                 encode(frame);
             }
         }
+        stopAndReleaseEncoder();
+        isFinished = true;
         if (callback != null) {
             callback.onStop();
         }
-        stopAndReleaseEncoder();
-        isFinished = true;
     }
 
     protected abstract void stopAndReleaseEncoder();

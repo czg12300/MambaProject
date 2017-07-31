@@ -8,6 +8,7 @@ import android.media.MediaRecorder;
 import android.opengl.GLSurfaceView;
 
 import com.mamba.gloable.FolderManager;
+import com.mamba.model.VLog;
 import com.mamba.model.record.camera.CameraImp;
 import com.mamba.model.record.encode.JakeMediaRecorder;
 import com.mamba.model.record.encode.audio.AudioCodecParameters;
@@ -38,8 +39,9 @@ public class RecordHolder {
     private CameraRenderer cameraRenderer;
     private JakeMediaRecorder mediaRecorder;
     private WeakReference<Activity> activityWeakReference;
+
     public RecordHolder(Activity activity) {
-        VideoCodecHolder.useMediaCodec=true;
+        VideoCodecHolder.useMediaCodec = true;
         activityWeakReference = new WeakReference<Activity>(activity);
         cameraRenderer = new CameraRenderer();
         mediaRecorder = new JakeMediaRecorder();
@@ -123,6 +125,7 @@ public class RecordHolder {
 
         @Override
         public void onStop(String outFile, boolean isSuccess) {
+            VLog.d("JakeMediaRecorder  onStop outFile:" + outFile);
             if (isSuccess) {
                 if (activityWeakReference != null && activityWeakReference.get() != null) {
 //                    File file = new File(outFile);

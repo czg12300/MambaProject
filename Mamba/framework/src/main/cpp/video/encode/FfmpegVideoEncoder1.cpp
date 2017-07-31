@@ -72,7 +72,6 @@ namespace video {
     void stopEncode() {
         isStop = true;
         fclose(fp_out);
-        av_freep(&frame->data[0]);
         av_frame_unref(frame);
         av_frame_free(&frame);
         avcodec_close(pCodecCtx);
