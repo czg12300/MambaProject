@@ -1,5 +1,7 @@
 package com.mamba.model.record.encode.audio;
 
+import android.util.Config;
+
 import com.framework.ndk.videoutils.SoundTouchUtils;
 import com.mamba.model.VLog;
 

@@ -11,12 +11,12 @@ android {
         versionName rootProject.ext.versionName
         applicationId "com.mamba"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-        externalNativeBuild {
-            cmake {
-                cppFlags ""
-                abiFilters 'armeabi-v7a'
-            }
-        }
+//        externalNativeBuild {
+//            cmake {
+//                cppFlags "-frtti -fexceptions"
+//                abiFilters 'armeabi-v7a'
+//            }
+//        }
     }
     buildTypes {
         release {
@@ -24,11 +24,11 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    externalNativeBuild {
-        cmake {
-            path "CMakeLists.txt"
-        }
-    }
+//    externalNativeBuild {
+//        cmake {
+//            path "CMakeLists.txt"
+//        }
+//    }
 }
 
 dependencies {

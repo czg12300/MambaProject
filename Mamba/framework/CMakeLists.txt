@@ -11,6 +11,7 @@ set(video_encode_dir ${video_dir}/encode)
 set(video_format_dir ${video_dir}/videoutils)
 set(video_effect_dir ${video_dir}/effect)
 set(video_common_dir ${video_dir}/common)
+set(video_media_dir ${video_dir}/media)
 
 #include目录，也就是头文件目录
 include_directories(
@@ -19,6 +20,7 @@ include_directories(
         ${video_format_dir}/include
         ${video_effect_dir}/include
         ${video_common_dir}/include
+        ${video_media_dir}/include
 )
 
 #导入so文件
@@ -40,11 +42,13 @@ set_target_properties( libsoundtouch
  file(GLOB video_format_dir_src ${video_format_dir}/*.cpp)
  file(GLOB video_effect_dir_src ${video_effect_dir}/*.cpp)
  file(GLOB video_common_dir_src ${video_common_dir}/*.cpp)
+ file(GLOB video_media_dir_src ${video_media_dir}/*.cpp)
  add_library(libframework SHARED
              ${video_encode_dir_src}
              ${video_format_dir_src}
              ${video_effect_dir_src}
              ${video_common_dir_src}
+             ${video_media_dir_src}
              )
 
 

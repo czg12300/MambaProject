@@ -12,7 +12,9 @@ import android.widget.TextView;
 import com.framework.base.BaseActivity;
 import com.mamba.R;
 import com.mamba.model.VLog;
+import com.mamba.model.play.MediaCodecDecodeSurfaceTest;
 import com.mamba.model.play.MediaCodecDecodeTest;
+import com.mamba.model.play.Test;
 import com.mamba.model.record.RecordHolder;
 import com.mamba.model.record.randerer.gpuimage.FilterFactory;
 import com.mamba.model.record.randerer.gpuimage.FilterType;
@@ -28,7 +30,7 @@ import java.io.IOException;
  */
 
 public class PlayActivity extends BaseActivity implements SurfaceHolder.Callback {
-    private MediaCodecDecodeTest decodeTest;
+    private Test decodeTest;
     private String outFile;
 
     @Override
@@ -42,7 +44,8 @@ public class PlayActivity extends BaseActivity implements SurfaceHolder.Callback
         outFile = getIntent().getStringExtra("out_file");
         VLog.d("PlayActivity outFile " + outFile);
         decodeTest = new MediaCodecDecodeTest();
-        decodeTest.setListener(new MediaCodecDecodeTest.Listener() {
+//        decodeTest = new MediaCodecDecodeSurfaceTest();
+        decodeTest.setListener(new Test.Listener() {
             long start;
 
             @Override
@@ -73,6 +76,7 @@ public class PlayActivity extends BaseActivity implements SurfaceHolder.Callback
                     decodeTest.start(outFile);
                     break;
                 case R.id.btn_toggle:
+                    decodeTest.toggle();
                     break;
             }
         }
