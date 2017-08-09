@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package com.mamba.model.record.randerer.gpuimage.filter;
+package com.mamba.model.record.renderer.gpuimage.filter;
 
 import android.graphics.PointF;
 import android.opengl.GLES20;
 
 
-import com.mamba.model.record.randerer.gpuimage.OpenGlUtils;
-import com.mamba.model.record.randerer.gpuimage.Rotation;
-import com.mamba.model.record.randerer.gpuimage.TextureRotationUtil;
+import com.mamba.model.record.renderer.gpuimage.OpenGlUtils;
+import com.mamba.model.record.renderer.gpuimage.Rotation;
+import com.mamba.model.record.renderer.gpuimage.TextureRotationUtil;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

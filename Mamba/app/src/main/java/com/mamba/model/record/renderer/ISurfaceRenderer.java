@@ -1,8 +1,8 @@
-package com.mamba.model.record.randerer;
+package com.mamba.model.record.renderer;
 
 import android.opengl.EGLContext;
 
-import com.mamba.model.record.randerer.gpuimage.FilterType;
+import com.mamba.model.record.renderer.gpuimage.FilterType;
 
 /**
  * surface数据渲染

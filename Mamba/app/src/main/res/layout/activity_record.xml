@@ -31,4 +31,55 @@
             android:layout_toRightOf="@+id/btn_record"
             android:text="切换 " />
     </RelativeLayout>
+
+    <RadioGroup
+        android:id="@+id/rg"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:layout_marginRight="15dp"
+        android:orientation="vertical">
+
+        <RadioButton
+            android:id="@+id/_rb_X4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-X4" />
+        <RadioButton
+            android:id="@+id/rb_X1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="X1" />
+
+        <RadioButton
+            android:id="@+id/rb_X2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="X2" />
+
+        <RadioButton
+            android:id="@+id/rb_X3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="X3" />
+
+        <RadioButton
+            android:id="@+id/rb_X4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="X4" />
+
+        <RadioButton
+            android:id="@+id/rb_X5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="X5" />
+
+        <RadioButton
+            android:id="@+id/rb_X6"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="X6" />
+    </RadioGroup>
 </RelativeLayout>

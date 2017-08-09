@@ -1,11 +1,10 @@
-package com.mamba.model.record.randerer.gpuimage;
+package com.mamba.model.record.renderer.gpuimage;
 
 import android.content.Context;
-import android.support.v4.app.NavUtils;
 
-import com.mamba.model.record.randerer.gpuimage.filter.GPUImageBeautyFilter;
-import com.mamba.model.record.randerer.gpuimage.filter.GPUImageFilter;
-import com.mamba.model.record.randerer.gpuimage.filter.MagicBlackCatFilter;
+import com.mamba.model.record.renderer.gpuimage.filter.GPUImageBeautyFilter;
+import com.mamba.model.record.renderer.gpuimage.filter.GPUImageFilter;
+import com.mamba.model.record.renderer.gpuimage.filter.MagicBlackCatFilter;
 
 
 /**

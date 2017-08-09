@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.mamba.model.record.randerer.gpuimage.filter;
+package com.mamba.model.record.renderer.gpuimage.filter;
 
 import android.content.Context;
 import android.opengl.GLES20;
 
 import com.mamba.R;
-import com.mamba.model.record.randerer.gpuimage.OpenGlUtils;
+import com.mamba.model.record.renderer.gpuimage.OpenGlUtils;
 
 
 public class GPUImageBeautyFilter extends GPUImageFilter {

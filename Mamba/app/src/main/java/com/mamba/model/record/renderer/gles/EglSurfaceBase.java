@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.mamba.model.record.encode.gles;
+package com.mamba.model.record.renderer.gles;
 
 import android.graphics.Bitmap;
 import android.opengl.EGL14;
@@ -23,7 +23,7 @@ import android.opengl.GLES20;
 import android.util.Log;
 
 
-import com.mamba.model.record.randerer.gpuimage.OpenGlUtils;
+import com.mamba.model.record.renderer.gpuimage.OpenGlUtils;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -61,7 +61,6 @@ public class EglSurfaceBase {
             throw new IllegalStateException("surface already created");
         }
         mEGLSurface = mEglCore.createWindowSurface(surface);
-
         // Don't cache width/height here, because the size of the underlying surface can change
         // out from under us (see e.g. HardwareScalerActivity).
         //mWidth = mEglCore.querySurface(mEGLSurface, EGL14.EGL_WIDTH);

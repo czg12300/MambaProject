@@ -4,7 +4,7 @@ import android.util.Log;
 
 /**
  * 日志工具
- * 
+ *
  * @author jake
  */
 public class VLog {
@@ -15,7 +15,6 @@ public class VLog {
 
     /**
      * 是否处于调试模式
-     *
      */
     public static boolean isDebug() {
         return isDebug;
@@ -23,7 +22,7 @@ public class VLog {
 
     /**
      * 设置是否调试模式
-     * 
+     *
      * @param debug
      */
     public static void setDebug(boolean debug) {
@@ -54,4 +53,84 @@ public class VLog {
         }
     }
 
+    public static Builder ld() {
+        return Builder.start();
+    }
+
+    public static class Builder {
+        StringBuilder builder;
+
+        private Builder() {
+            builder = new StringBuilder();
+        }
+
+        public Builder append(String msg) {
+            builder.append(msg);
+            builder.append("    ");
+            return this;
+        }
+
+        public Builder append(Object obj) {
+            builder.append(obj);
+            builder.append("    ");
+            return this;
+        }
+
+        public Builder append(boolean obj) {
+            builder.append(obj);
+            builder.append("    ");
+            return this;
+        }
+
+        public Builder append(char obj) {
+            builder.append(obj);
+            builder.append("    ");
+            return this;
+        }
+
+        public Builder append(char[] obj) {
+            builder.append(obj);
+            builder.append("    ");
+            return this;
+        }
+
+        public Builder append(int obj) {
+            builder.append(obj);
+            builder.append("    ");
+            return this;
+        }
+
+        public Builder append(float obj) {
+            builder.append(obj);
+            builder.append("    ");
+            return this;
+        }
+
+        public Builder append(double obj) {
+            builder.append(obj);
+            builder.append("    ");
+            return this;
+        }
+
+        public Builder append(long obj) {
+            builder.append(obj);
+            builder.append("    ");
+            return this;
+        }
+
+        public Builder append(CharSequence obj) {
+            builder.append(obj);
+            builder.append("    ");
+            return this;
+        }
+
+
+        public void showLog() {
+            VLog.d(builder.toString());
+        }
+
+        public static Builder start() {
+            return new Builder();
+        }
+    }
 }

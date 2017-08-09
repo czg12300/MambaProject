@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.mamba.model.record.randerer.gpuimage;
+package com.mamba.model.record.renderer.gpuimage;
 
 public enum Rotation {
     NORMAL, ROTATION_90, ROTATION_180, ROTATION_270;

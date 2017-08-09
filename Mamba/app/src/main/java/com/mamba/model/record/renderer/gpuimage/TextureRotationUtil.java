@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.mamba.model.record.randerer.gpuimage;
+package com.mamba.model.record.renderer.gpuimage;
 
 public class TextureRotationUtil {
 

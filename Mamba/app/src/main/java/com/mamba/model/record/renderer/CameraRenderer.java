@@ -1,4 +1,4 @@
-package com.mamba.model.record.randerer;
+package com.mamba.model.record.renderer;
 
 import android.graphics.SurfaceTexture;
 import android.opengl.EGL14;
@@ -9,12 +9,12 @@ import android.opengl.GLSurfaceView;
 import com.mamba.model.VLog;
 import com.mamba.model.record.camera.CameraImp;
 import com.mamba.model.record.camera.CameraImpFactory;
-import com.mamba.model.record.randerer.gpuimage.FilterFactory;
-import com.mamba.model.record.randerer.gpuimage.OpenGlUtils;
-import com.mamba.model.record.randerer.gpuimage.Rotation;
-import com.mamba.model.record.randerer.gpuimage.TextureRotationUtil;
-import com.mamba.model.record.randerer.gpuimage.filter.CameraInputFilter;
-import com.mamba.model.record.randerer.gpuimage.filter.GPUImageFilter;
+import com.mamba.model.record.renderer.gpuimage.FilterFactory;
+import com.mamba.model.record.renderer.gpuimage.OpenGlUtils;
+import com.mamba.model.record.renderer.gpuimage.Rotation;
+import com.mamba.model.record.renderer.gpuimage.TextureRotationUtil;
+import com.mamba.model.record.renderer.gpuimage.filter.CameraInputFilter;
+import com.mamba.model.record.renderer.gpuimage.filter.GPUImageFilter;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

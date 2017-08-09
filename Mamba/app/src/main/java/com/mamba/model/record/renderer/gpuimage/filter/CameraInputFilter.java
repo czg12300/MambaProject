@@ -1,10 +1,10 @@
-package com.mamba.model.record.randerer.gpuimage.filter;
+package com.mamba.model.record.renderer.gpuimage.filter;
 
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 
 
-import com.mamba.model.record.randerer.gpuimage.OpenGlUtils;
+import com.mamba.model.record.renderer.gpuimage.OpenGlUtils;
 
 import java.nio.FloatBuffer;
 

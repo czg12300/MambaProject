@@ -2,16 +2,21 @@ package com.mamba.model.record;
 
 import android.graphics.ImageFormat;
 import android.opengl.GLSurfaceView;
+import android.text.TextUtils;
 
+import com.framework.ndk.videoutils.FfmpegFormatUtils;
 import com.framework.utils.FileUtil;
 import com.mamba.gloable.FolderManager;
+import com.mamba.model.VLog;
 import com.mamba.model.record.camera.CameraImp;
-import com.mamba.model.record.encode.VideoCodecHolder;
-import com.mamba.model.record.encode.VideoCodecParameters;
-import com.mamba.model.record.randerer.CameraRenderer;
-import com.mamba.model.record.randerer.gpuimage.filter.GPUImageFilter;
+import com.mamba.model.record.encode.OnRecorderListener;
+import com.mamba.model.record.encode.video.VideoParams;
+import com.mamba.model.record.encode.video.VideoRecorder;
+import com.mamba.model.record.renderer.CameraRenderer;
+import com.mamba.model.record.renderer.gpuimage.filter.GPUImageFilter;
 
-import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * 处理视频录制的业务逻辑
@@ -22,27 +27,107 @@ import java.io.IOException;
 
 public class RecordHolder {
     private CameraRenderer cameraRenderer;
-    private VideoCodecHolder videoCodecHolder;
+    private static final int DEFAULT_FRAME_RATE = 25;
+    private VideoRecorder videoRecorder;
+    private List<VideoFile> mRecordList;
+
+    public enum Speed {
+        NORMAL, X2, X3, X4, X5, X6, _X4
+    }
 
     public RecordHolder() {
         cameraRenderer = new CameraRenderer();
-        videoCodecHolder = new VideoCodecHolder();
+        videoRecorder = new VideoRecorder();
+        cameraRenderer.setSurfaceRenderer(videoRecorder);
+        videoRecorder.setOnRecorderListener(onRecorderListener);
+        mRecordList = new LinkedList<>();
     }
 
-    private VideoCodecParameters createVideoCodecParameters() {
-        return VideoCodecParameters.VideoCodecParametersBuilder.create()
-                .setBitRate((int) (1.5 * 1024 * 1024))
-                .setCodecType(VideoCodecParameters.CodecType.H264)
-                .setFrameRate(25)
+    private OnRecorderListener onRecorderListener = new OnRecorderListener() {
+        @Override
+        public void onStart(long id, int type) {
+
+        }
+
+        @Override
+        public void onFail(long id, int type) {
+            VLog.ld().append("OnRecorderListener onFail").showLog();
+            for (VideoFile vf : mRecordList) {
+                if (vf.id == id) {
+                    switch (type) {
+                        case TYPE_AUDIO:
+                            vf.audioRecordState = VideoFile.STATE_FAIL;
+                            if (vf.videoRecordState == VideoFile.STATE_SUCCESS || vf.videoRecordState == VideoFile.STATE_FAIL) {
+                                FileUtil.deleteFile(vf.h264);
+                                mRecordList.remove(vf);
+                            }
+                            break;
+                        case TYPE_VIDEO:
+                            vf.videoRecordState = VideoFile.STATE_FAIL;
+                            if (vf.audioRecordState == VideoFile.STATE_SUCCESS || vf.audioRecordState == VideoFile.STATE_FAIL) {
+                                FileUtil.deleteFile(vf.audio);
+                                mRecordList.remove(vf);
+                            }
+                            break;
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        @Override
+        public void onSuccess(long id, int type) {
+            VLog.ld().append("OnRecorderListener onSuccess").showLog();
+            for (VideoFile vf : mRecordList) {
+                if (vf.id == id) {
+                    switch (type) {
+                        case TYPE_AUDIO:
+                            vf.audioRecordState = VideoFile.STATE_SUCCESS;
+                            if (vf.videoRecordState == VideoFile.STATE_SUCCESS) {
+                                FfmpegFormatUtils.format(vf.h264, vf.audio, vf.outFile);
+                                mRecordList.remove(vf);
+                            }
+                            break;
+                        case TYPE_VIDEO:
+                            vf.videoRecordState = VideoFile.STATE_SUCCESS;
+                            if (vf.audioRecordState == VideoFile.STATE_SUCCESS) {
+                                FfmpegFormatUtils.format(vf.h264, vf.audio, vf.outFile);
+                                mRecordList.remove(vf);
+                            } else if (vf.audioRecordState == VideoFile.STATE_NO) {
+                                FfmpegFormatUtils.formatVideoStream(vf.h264, vf.outFile);
+                                mRecordList.remove(vf);
+                            }
+                            break;
+                    }
+
+                    break;
+                }
+            }
+        }
+    };
+
+    private VideoParams createVideoCodecParameters(long id, Speed speed, String outFile) {
+        return VideoParams.VideoCodecParametersBuilder.create()
+                .setId(id)
+                .setBitRate((int) (2.1 * 1024 * 1024))
+                .setCodecType(VideoParams.CodecType.H264)
+                .setFrameRate(DEFAULT_FRAME_RATE)
                 .setKeyIFrameInterval(1)
                 .setWidth(720)
                 .setHeight(1280)
-                .setOutFile(getOutFile())
+                .setOutFile(outFile)
+                .setPositionFrameRate(transSpeed(speed))
                 .build();
     }
 
     private String getOutFile() {
         String file = FolderManager.ROOT_FOLDER + System.currentTimeMillis() + ".mp4";
+        return file;
+    }
+
+    private String getOutH264File() {
+        String file = FolderManager.ROOT_FOLDER + System.currentTimeMillis() + ".h264";
         return file;
     }
 
@@ -66,22 +151,65 @@ public class RecordHolder {
         cameraRenderer.setFilter(filter);
     }
 
-    public void startEncode() {
-        try {
-            videoCodecHolder.prepare(createVideoCodecParameters());
-            cameraRenderer.setSurfaceRenderer(videoCodecHolder.getVideoCodecRenderer());
-            videoCodecHolder.setPositionFrameRate(6);
-            videoCodecHolder.start();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void start(Speed speed) {
+        VideoFile videoFile = new VideoFile(System.currentTimeMillis(), getOutH264File(), null, getOutFile());
+        VideoParams videoParams = createVideoCodecParameters(videoFile.id, speed, videoFile.h264);
+        mRecordList.add(videoFile);
+        videoRecorder.start(videoParams);
     }
 
-    public void stopEncode() {
-        try {
-            videoCodecHolder.stop();
-        } catch (IOException e) {
-            e.printStackTrace();
+    private int transSpeed(Speed speed) {
+        int frameRate = DEFAULT_FRAME_RATE;
+        switch (speed) {
+            case NORMAL:
+                frameRate /= 1;
+                break;
+            case X2:
+                frameRate /= 2;
+                break;
+            case X3:
+                frameRate /= 3;
+                break;
+            case X4:
+                frameRate /= 4;
+                break;
+            case X5:
+                frameRate /= 5;
+                break;
+            case X6:
+                frameRate /= 6;
+                break;
+            case _X4:
+                frameRate /= 4;
+                break;
+        }
+        return frameRate;
+    }
+
+    public void stop() {
+        videoRecorder.stop();
+    }
+
+
+    private static class VideoFile {
+        public static final int STATE_NO = -0x01;
+        public static final int STATE_START = 0x01;
+        public static final int STATE_SUCCESS = 0x02;
+        public static final int STATE_FAIL = 0x03;
+        long id;
+        String h264;
+        String audio;
+        String outFile;
+        int audioRecordState;
+        int videoRecordState;
+
+        public VideoFile(long id, String h264, String audio, String outFile) {
+            this.id = id;
+            this.h264 = h264;
+            this.audio = audio;
+            this.outFile = outFile;
+            audioRecordState = !TextUtils.isEmpty(audio) ? STATE_START : STATE_NO;
+            videoRecordState = !TextUtils.isEmpty(h264) ? STATE_START : STATE_NO;
         }
     }
 }

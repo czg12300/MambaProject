@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.mamba.model.record.randerer.gpuimage;
+package com.mamba.model.record.renderer.gpuimage;
 
 import android.content.Context;
 import android.content.res.AssetManager;
@@ -27,7 +27,7 @@ import android.opengl.GLUtils;
 import android.util.Log;
 
 
-import com.mamba.model.record.randerer.gpuimage.filter.GPUImageFilter;
+import com.mamba.model.record.renderer.gpuimage.filter.GPUImageFilter;
 
 import java.io.BufferedReader;
 import java.io.IOException;

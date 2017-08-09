@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.mamba.model.record.encode.gles;
+package com.mamba.model.record.renderer.gles;
 
 import android.graphics.SurfaceTexture;
 import android.opengl.EGL14;
@@ -198,6 +198,10 @@ public final class EglCore {
         mEGLDisplay = EGL14.EGL_NO_DISPLAY;
         mEGLContext = EGL14.EGL_NO_CONTEXT;
         mEGLConfig = null;
+    }
+
+    public void stop() {
+        mEGLContext = EGL14.EGL_NO_CONTEXT;
     }
 
     @Override

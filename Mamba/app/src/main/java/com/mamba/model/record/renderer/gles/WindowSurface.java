@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.mamba.model.record.encode.gles;
+package com.mamba.model.record.renderer.gles;
 
 import android.graphics.SurfaceTexture;
 import android.view.Surface;
