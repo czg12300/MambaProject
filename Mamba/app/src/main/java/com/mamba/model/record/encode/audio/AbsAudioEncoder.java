@@ -1,10 +1,7 @@
 package com.mamba.model.record.encode.audio;
 
+import com.framework.ndk.media.SoundTouch;
 import com.mamba.model.VLog;
-import com.mamba.model.record.encode.video.TransTask;
-import com.mamba.model.record.encode.video.VideoCodecParameters;
-import com.mamba.model.record.encode.video.VideoEncoder;
-import com.mamba.model.record.encode.video.VideoFrame;
 
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -16,17 +13,15 @@ import java.util.concurrent.LinkedBlockingQueue;
  * @since 2017/6/30 上午11:06
  */
 
-public abstract class AbsAudioEncoder implements AudioEncoder, Runnable, ChangeSpeedTask.Callback {
+public abstract class AbsAudioEncoder implements AudioEncoder, Runnable {
     private volatile boolean isRunning = false;
     private volatile boolean isFinished = false;
-    private volatile boolean isTransFinished = false;
     private Queue<AudioFrame> mTransList;
     private Callback callback;
-    private ChangeSpeedTask changeSpeedTask;
+    private SoundTouch mSoundTouch;
 
     public AbsAudioEncoder() {
         mTransList = new LinkedBlockingQueue<>();
-
     }
 
 
@@ -55,14 +50,8 @@ public abstract class AbsAudioEncoder implements AudioEncoder, Runnable, ChangeS
                     e.printStackTrace();
                 }
             }
-            if (changeSpeedTask != null) {
-                if (!isRunning && isTransFinished) {
-                    break;
-                }
-            } else {
-                if (!isRunning) {
-                    break;
-                }
+            if (!isRunning) {
+                break;
             }
 
         }
@@ -74,7 +63,6 @@ public abstract class AbsAudioEncoder implements AudioEncoder, Runnable, ChangeS
         }
         stopAndReleaseEncoder();
         isFinished = true;
-        changeSpeedTask = null;
         if (callback != null) {
             callback.onStop();
         }
@@ -91,19 +79,6 @@ public abstract class AbsAudioEncoder implements AudioEncoder, Runnable, ChangeS
         encodeRawFrame(frame);
     }
 
-    @Override
-    public void onTrans(AudioFrame frame) {
-        if (mTransList != null) {
-            synchronized (mTransList) {
-                mTransList.offer(frame);
-            }
-        }
-    }
-
-    @Override
-    public void onTransFinished() {
-        isTransFinished = true;
-    }
 
     @Override
     public void setCallback(Callback callback) {
@@ -127,10 +102,17 @@ public abstract class AbsAudioEncoder implements AudioEncoder, Runnable, ChangeS
         }
         isRunning = true;
         if (parameters.speed != 1) {
-            changeSpeedTask = new ChangeSpeedTask();
-            changeSpeedTask.setCallback(this);
-            changeSpeedTask.startTask(parameters.speed);
-            isTransFinished = false;
+            mSoundTouch = new SoundTouch();
+            mSoundTouch.setupParams(0, parameters.channelCount, parameters.sampleRate, 2, 1, 1);
+            VLog.d("ChangeSpeedTask   mSoundTouch.setupParams start");
+//        mSoundTouch.setRate(1);
+//            mSoundTouch.setRate();
+//            mSoundTouch.setRateChange(parameters.speed);
+        mSoundTouch.setTempo(1);
+//            if (parameters.speed > 0) {
+                mSoundTouch.setTempoChange(parameters.speed);
+//            }
+//            mSoundTouch.setPitchSemi(-1);
         }
         isFinished = false;
         new Thread(this).start();
@@ -138,22 +120,32 @@ public abstract class AbsAudioEncoder implements AudioEncoder, Runnable, ChangeS
 
     @Override
     public void offerRawFrame(AudioFrame rawFrame) {
-        if (changeSpeedTask != null) {
-            changeSpeedTask.addRawData(rawFrame);
-        } else {
-            if (mTransList != null) {
-                synchronized (mTransList) {
-                    mTransList.offer(rawFrame);
-                }
+        if (rawFrame == null) {
+            return;
+        }
+        if (mSoundTouch != null) {
+            mSoundTouch.putBytes(rawFrame.data);
+            int receiveSTSamples = 0;
+            receiveSTSamples = mSoundTouch.getBytes(rawFrame.data);
+            if (receiveSTSamples > 0) {
+                byte[] result = new byte[receiveSTSamples];
+                System.arraycopy(rawFrame.data, 0, result, 0, receiveSTSamples);
+                rawFrame.data = result;
+                rawFrame.size = result.length;
+            } else {
+                rawFrame = null;
             }
         }
+        if (mTransList != null && rawFrame != null) {
+            synchronized (mTransList) {
+                mTransList.offer(rawFrame);
+            }
+        }
+
     }
 
     @Override
     public synchronized void stopEncode() {
         isRunning = false;
-        if (changeSpeedTask != null) {
-            changeSpeedTask.stopTask();
-        }
     }
 }

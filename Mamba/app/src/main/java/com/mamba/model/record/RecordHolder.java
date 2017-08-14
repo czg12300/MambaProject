@@ -54,7 +54,7 @@ public class RecordHolder {
                 .setBitRate((int) (2.0 * 1024 * 1024))
                 .setCodecType(VideoCodecParameters.CodecType.H264)
                 .setFrameRate(25)//硬编码一般支持25和30帧，其他帧率不支持，如果导致视频播放速度不正确
-                .setSpeedFrameRate(25)
+                .setSpeedFrameRate(12)
                 .setKeyIFrameInterval(4)
                 .setWidth(OUT_WIDTH)
                 .setHeight(OUT_HEIGHT)
@@ -68,7 +68,7 @@ public class RecordHolder {
                 .setAudioSource(MediaRecorder.AudioSource.MIC)
                 .setChannelLayout(AudioFormat.CHANNEL_IN_MONO)
                 .setAudioFormat(AudioFormat.ENCODING_PCM_16BIT)
-                .setSpeed(1.0f)
+                .setSpeed(60)
                 .setSampleRate(44100)
                 .setOutFile(getOutAudio())
                 .build();
