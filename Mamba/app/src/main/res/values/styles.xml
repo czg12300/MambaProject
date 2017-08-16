@@ -1,11 +1,7 @@
 <resources>
 
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <item name="windowNoTitle">true</item>
-    </style>
-
-    <style name="ActivityThemeFullScreen" parent="AppTheme">
-        <item name="android:windowFullscreen">true</item>
+    <style name="textHomeTab">
+        <item name="android:textSize">@dimen/font_px_34</item>
     </style>
 
 </resources>

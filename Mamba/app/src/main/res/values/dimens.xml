@@ -1,0 +1,17 @@
+﻿<resources>
+    <!--字体大小-->
+    <dimen name="font_px_12">6dp</dimen>
+    <dimen name="font_px_14">7dp</dimen>
+    <dimen name="font_px_16">8dp</dimen>
+    <dimen name="font_px_18">9dp</dimen>
+    <dimen name="font_px_20">10dp</dimen>
+    <dimen name="font_px_22">11dp</dimen>
+    <dimen name="font_px_24">12dp</dimen>
+    <dimen name="font_px_26">13dp</dimen>
+    <dimen name="font_px_28">14dp</dimen>
+    <dimen name="font_px_30">15dp</dimen>
+    <dimen name="font_px_32">16dp</dimen>
+    <dimen name="font_px_34">17dp</dimen>
+    <dimen name="font_px_36">18dp</dimen>
+    <!--控件大小-->
+</resources>

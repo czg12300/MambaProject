@@ -1,0 +1,16 @@
+<resources>
+
+    <style name="BaseAppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowIsTranslucent">false</item>
+    </style>
+
+    <style name="AppTheme" parent="BaseAppTheme">
+    </style>
+
+    <style name="ActivityThemeFullScreen" parent="AppTheme">
+        <item name="android:windowBackground">@color/color_trans</item>
+        <item name="android:windowFullscreen">true</item>
+    </style>
+
+</resources>

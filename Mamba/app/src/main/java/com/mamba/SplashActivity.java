@@ -10,6 +10,7 @@ import com.framework.base.BaseActivity;
 import com.framework.utils.JumpUtils;
 import com.framework.widgets.GradientTextView;
 import com.mamba.ui.RecordActivity;
+import com.mamba.ui.activity.MainActivity;
 
 public class SplashActivity extends BaseActivity {
     private GradientTextView mTvSlogan;
@@ -29,7 +30,7 @@ public class SplashActivity extends BaseActivity {
 
             @Override
             public void onFinish() {
-                JumpUtils.startActivity(mTvSlogan.getContext(), RecordActivity.class);
+                JumpUtils.startActivity(mTvSlogan.getContext(), MainActivity.class);
                 finish();
             }
         }.start();
