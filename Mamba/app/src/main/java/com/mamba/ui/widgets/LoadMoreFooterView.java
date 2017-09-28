@@ -3,12 +3,9 @@ package com.mamba.ui.widgets;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.TextView;
-
-import com.kugou.game.framework.R;
 
 
 /**
@@ -38,11 +35,11 @@ public class LoadMoreFooterView extends FrameLayout {
 
     public LoadMoreFooterView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        LayoutInflater.from(context).inflate(R.layout.irecyclerview_layout_load_more_footer_view, this, true);
-
-        mLoadingView = findViewById(R.id.loadingView);
-        mErrorView = findViewById(R.id.errorView);
-        mTheEndView = (TextView) findViewById(R.id.theEndView);
+//        LayoutInflater.from(context).inflate(R.layout.irecyclerview_layout_load_more_footer_view, this, true);
+//
+//        mLoadingView = findViewById(R.id.loadingView);
+//        mErrorView = findViewById(R.id.errorView);
+//        mTheEndView = (TextView) findViewById(R.id.theEndView);
 
 //        mEndViewText = (TextView) mTheEndView.findViewById(R.id.tvTheEnd);
 

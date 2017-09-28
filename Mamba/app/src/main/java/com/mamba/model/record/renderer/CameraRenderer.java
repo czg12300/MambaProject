@@ -150,7 +150,6 @@ public class CameraRenderer implements GLSurfaceView.Renderer, CameraImp.CameraI
         }
     }
 
-    public static native void convertRgba2Yuv(byte[] rgba, int width, int height, byte[] yuv, int type);
 
     long lastTimes = 0;
     int count = 0;

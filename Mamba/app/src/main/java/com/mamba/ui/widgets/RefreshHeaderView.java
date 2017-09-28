@@ -43,15 +43,15 @@ public class RefreshHeaderView extends RelativeLayout implements RefreshTrigger 
     public RefreshHeaderView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
 
-        inflate(context, R.layout.irecyclerview_layout_refresh_header_view, this);
-
-        tvRefresh = (TextView) findViewById(R.id.tvRefresh);
-
-        ivArrow = (ImageView) findViewById(R.id.ivArrow);
+//        inflate(context, R.layout.irecyclerview_layout_refresh_header_view, this);
+//
+//        tvRefresh = (TextView) findViewById(R.id.tvRefresh);
+//
+//        ivArrow = (ImageView) findViewById(R.id.ivArrow);
 
         //ivSuccess = (ImageView) findViewById(R.id.ivSuccess);
 
-        progressBar = (ProgressBar) findViewById(R.id.progressbar);
+//        progressBar = (ProgressBar) findViewById(R.id.progressbar);
 
         //rotateUp = AnimationUtils.loadAnimation(context, R.anim.irecyclerview_refresh_rotate_up);
 

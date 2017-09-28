@@ -30,9 +30,28 @@ public class RecordHolder {
     private static final int DEFAULT_FRAME_RATE = 25;
     private VideoRecorder videoRecorder;
     private List<VideoFile> mRecordList;
+    private static int sOutWidth = 720;
+    private static int sOutHeight = 1280;
+    private static int sPreviewWidth = 1280;
+    private static int sPreviewHeight = 720;
+    private static int sBitrate = (int) (3.1 * 1024 * 1024);
 
     public enum Speed {
         NORMAL, X2, X3, X4, X5, X6, _X4
+    }
+
+    public static void setOutSize(int width, int height) {
+        sOutWidth = width;
+        sOutHeight = height;
+    }
+
+    public static void setPreviewSize(int width, int height) {
+        sPreviewWidth = width;
+        sPreviewHeight = height;
+    }
+
+    public static void setBitrate(int bitrate) {
+        sBitrate = bitrate;
     }
 
     public RecordHolder() {
@@ -110,12 +129,12 @@ public class RecordHolder {
     private VideoParams createVideoCodecParameters(long id, Speed speed, String outFile) {
         return VideoParams.VideoCodecParametersBuilder.create()
                 .setId(id)
-                .setBitRate((int) (2.1 * 1024 * 1024))
+                .setBitRate(sBitrate)
                 .setCodecType(VideoParams.CodecType.H264)
                 .setFrameRate(DEFAULT_FRAME_RATE)
                 .setKeyIFrameInterval(1)
-                .setWidth(720)
-                .setHeight(1280)
+                .setWidth(sOutWidth)
+                .setHeight(sOutHeight)
                 .setOutFile(outFile)
                 .setPositionFrameRate(transSpeed(speed))
                 .build();
@@ -134,7 +153,7 @@ public class RecordHolder {
     private CameraImp.CameraImpParameters createCameraImpParameters() {
         return CameraImp.CameraImpParametersBuilder.create()
                 .setPreviewFormat(ImageFormat.NV21)
-                .setPreviewSize(new CameraImp.Size(1280, 720))
+                .setPreviewSize(new CameraImp.Size(sPreviewWidth, sPreviewHeight))
                 .build();
     }
 

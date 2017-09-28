@@ -1,10 +1,8 @@
-package com.framework.widgets.irecyclerview;
-
+package com.framework.widgets.jakerecycleview;
 
 import android.animation.Animator;
 import android.animation.ValueAnimator;
 import android.content.Context;
-import android.content.res.TypedArray;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.Nullable;
 import android.support.v4.view.MotionEventCompat;
@@ -22,12 +20,19 @@ import android.view.animation.Interpolator;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 
+import com.framework.widgets.irecyclerview.*;
 
+import java.util.ArrayList;
 
 /**
- * Created by aspsine on 16/3/3.
+ * 可以添加header footer和上下拉刷新加载更多的JRecycleView，
+ * 调用addHeaderView、addFooterView、setRefreshView、setLoadMoreView等必须在调用setAdapter之前
+ *
+ * @author jake
+ * @since 2017/9/19 下午4:13
  */
-public class IRecyclerView extends RecyclerView {
+
+public class JRecycleView extends RecyclerView {
     private static final String TAG = IRecyclerView.class.getSimpleName();
 
     private static final int STATUS_DEFAULT = 0;
@@ -44,82 +49,59 @@ public class IRecyclerView extends RecyclerView {
 
     private boolean mIsAutoRefreshing;
 
-    private boolean mRefreshEnabled;
+    private boolean mRefreshEnabled = false;
 
-    private boolean mLoadMoreEnabled;
+    private boolean mLoadMoreEnabled = false;
 
     private int mRefreshFinalMoveOffset;
 
-    private OnRefreshListener mOnRefreshListener;
+    private ArrayList<OnRefreshListener> mOnRefreshListeners;
 
-    private OnLoadMoreListener mOnLoadMoreListener;
+    private ArrayList<OnLoadMoreListener> mOnLoadMoreListeners;
 
     private OnLoadMoreScrollListener mOnLoadMoreScrollListener;
+    private LinearLayout mHeaderContainer;
+    private LinearLayout mFooterContainer;
+    private DragHelper mDragHelper;
 
-    private RefreshHeaderLayout mRefreshHeaderContainer;
-
-    private FrameLayout mLoadMoreFooterContainer;
-
-    private LinearLayout mHeaderViewContainer;
-
-    private LinearLayout mFooterViewContainer;
-
-    private View mRefreshHeaderView;
-
-    private View mLoadMoreFooterView;
-
-    public IRecyclerView(Context context) {
+    public JRecycleView(Context context) {
         this(context, null);
     }
 
-    public IRecyclerView(Context context, @Nullable AttributeSet attrs) {
+    public JRecycleView(Context context, @Nullable AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public IRecyclerView(Context context, @Nullable AttributeSet attrs, int defStyle) {
+    public JRecycleView(Context context, @Nullable AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-//        final TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.IRecyclerView, defStyle, 0);
-        final TypedArray a = null;//context.obtainStyledAttributes(attrs, R.styleable.IRecyclerView, defStyle, 0);
-        @LayoutRes int refreshHeaderLayoutRes = -1;
-        @LayoutRes int loadMoreFooterLayoutRes = -1;
-        int refreshFinalMoveOffset = -1;
-        boolean refreshEnabled;
-        boolean loadMoreEnabled;
-
-        try {
-//            refreshEnabled = a.getBoolean(R.styleable.IRecyclerView_refreshEnabled, false);
-//            loadMoreEnabled = a.getBoolean(R.styleable.IRecyclerView_loadMoreEnabled, false);
-//            refreshHeaderLayoutRes = a.getResourceId(R.styleable.IRecyclerView_refreshHeaderLayout, -1);
-//            loadMoreFooterLayoutRes = a.getResourceId(R.styleable.IRecyclerView_loadMoreFooterLayout, -1);
-//            refreshFinalMoveOffset = a.getDimensionPixelOffset(R.styleable.IRecyclerView_refreshFinalMoveOffset, -1);
-
-        } finally {
-            a.recycle();
-        }
-
-//        setRefreshEnabled(refreshEnabled);
-//
-//        setLoadMoreEnabled(loadMoreEnabled);
-
-        if (refreshHeaderLayoutRes != -1) {
-            setRefreshHeaderView(refreshHeaderLayoutRes);
-        }
-        if (loadMoreFooterLayoutRes != -1) {
-            setLoadMoreFooterView(loadMoreFooterLayoutRes);
-        }
-        if (refreshFinalMoveOffset != -1) {
-            setRefreshFinalMoveOffset(refreshFinalMoveOffset);
-        }
-        setStatus(STATUS_DEFAULT);
+        mDragHelper = new DragHelper();
     }
+
+    private LinearLayout getHeaderContainer() {
+        if (mHeaderContainer == null) {
+            mHeaderContainer = new LinearLayout(getContext());
+            mHeaderContainer.setOrientation(isHorizontal() ? LinearLayout.HORIZONTAL : LinearLayout.VERTICAL);
+        }
+        return mHeaderContainer;
+    }
+
+    private LinearLayout getFooterContainer() {
+        if (mFooterContainer == null) {
+            mFooterContainer = new LinearLayout(getContext());
+            mFooterContainer.setOrientation(isHorizontal() ? LinearLayout.HORIZONTAL : LinearLayout.VERTICAL);
+        }
+        return mFooterContainer;
+    }
+
     private boolean isHorizontal() {
         if (getLayoutManager() instanceof LinearLayoutManager) {
             LinearLayoutManager manager = (LinearLayoutManager) getLayoutManager();
-            return manager.getOrientation()==LinearLayoutManager.HORIZONTAL;
+            return manager.getOrientation() == LinearLayoutManager.HORIZONTAL;
         }
         return false;
 
     }
+
     @Override
     protected void onMeasure(int widthSpec, int heightSpec) {
         super.onMeasure(widthSpec, heightSpec);
@@ -134,40 +116,35 @@ public class IRecyclerView extends RecyclerView {
         this.mRefreshEnabled = enabled;
     }
 
-    public boolean getRefreshEnabled() {
+    public boolean refreshEnabled() {
         return mRefreshEnabled;
+    }
+
+    public boolean loadMoreEnabled() {
+        return mLoadMoreEnabled;
     }
 
     public void setLoadMoreEnabled(boolean enabled) {
         this.mLoadMoreEnabled = enabled;
-        if (mLoadMoreEnabled) {
-            if (mOnLoadMoreScrollListener == null) {
-                mOnLoadMoreScrollListener = new OnLoadMoreScrollListener() {
-                    @Override
-                    public void onLoadMore(RecyclerView recyclerView) {
+    }
 
-                        if (mOnLoadMoreListener != null && mStatus == STATUS_DEFAULT) {
-                            mOnLoadMoreListener.onLoadMore(mLoadMoreFooterView);
-                        }
-                    }
-                };
-            } else {
-                removeOnScrollListener(mOnLoadMoreScrollListener);
+
+    public void addOnRefreshListener(OnRefreshListener listener) {
+        if (listener != null) {
+            if (mOnRefreshListeners == null) {
+                mOnRefreshListeners = new ArrayList<>();
             }
-            addOnScrollListener(mOnLoadMoreScrollListener);
-        } else {
-            if (mOnLoadMoreScrollListener != null) {
-                removeOnScrollListener(mOnLoadMoreScrollListener);
-            }
+            mOnRefreshListeners.add(listener);
         }
     }
 
-    public void setOnRefreshListener(OnRefreshListener listener) {
-        this.mOnRefreshListener = listener;
-    }
-
-    public void setOnLoadMoreListener(OnLoadMoreListener listener) {
-        this.mOnLoadMoreListener = listener;
+    public void addOnLoadMoreListener(OnLoadMoreListener listener) {
+        if (listener != null) {
+            if (mOnLoadMoreListeners == null) {
+                mOnLoadMoreListeners = new ArrayList<>();
+            }
+            mOnLoadMoreListeners.add(listener);
+        }
     }
 
     public void setRefreshing(boolean refreshing) {
@@ -188,46 +165,34 @@ public class IRecyclerView extends RecyclerView {
         this.mRefreshFinalMoveOffset = refreshFinalMoveOffset;
     }
 
-    public void setRefreshHeaderView(View refreshHeaderView) {
-        if (!isRefreshTrigger(refreshHeaderView)) {
-            throw new ClassCastException("Refresh header view must be an implement of RefreshTrigger");
+    public void setRefreshView(View refreshHeaderView) {
+        if (!(refreshHeaderView instanceof DragTrigger)) {
+            throw new ClassCastException("Refresh header view must be an implement of DragTrigger");
         }
-
-        if (mRefreshHeaderView != null) {
-            removeRefreshHeaderView();
+        mDragHelper.setRefreshDragTrigger((DragTrigger) refreshHeaderView);
+        if (getHeaderContainer().getChildCount() > 0) {
+            View child0 = getHeaderContainer().getChildAt(0);
+            if (child0 instanceof DragTrigger) {
+                getHeaderContainer().removeView(child0);
+            }
         }
-        if (mRefreshHeaderView != refreshHeaderView) {
-            this.mRefreshHeaderView = refreshHeaderView;
-            ensureRefreshHeaderContainer();
-            mRefreshHeaderContainer.addView(refreshHeaderView);
-        }
+        getHeaderContainer().addView(refreshHeaderView, 0);
     }
 
-    public void setRefreshHeaderView(@LayoutRes int refreshHeaderLayoutRes) {
-        ensureRefreshHeaderContainer();
-        final View refreshHeader = LayoutInflater.from(getContext()).inflate(refreshHeaderLayoutRes, mRefreshHeaderContainer, false);
-        if (refreshHeader != null) {
-            setRefreshHeaderView(refreshHeader);
-        }
+    public void setRefreshView(@LayoutRes int refreshHeaderLayoutRes) {
+        setRefreshView(inflate(getContext(), refreshHeaderLayoutRes, null));
     }
 
-    public void setLoadMoreFooterView(View loadMoreFooterView) {
-        if (mLoadMoreFooterView != null) {
-            removeLoadMoreFooterView();
+    public void setLoadMoreView(View view) {
+        if (!(view instanceof DragTrigger)) {
+            throw new ClassCastException("Refresh header view must be an implement of DragTrigger");
         }
-        if (mLoadMoreFooterView != loadMoreFooterView) {
-            this.mLoadMoreFooterView = loadMoreFooterView;
-            ensureLoadMoreFooterContainer();
-            mLoadMoreFooterContainer.addView(loadMoreFooterView);
-        }
+        mDragHelper.setRefreshDragTrigger((DragTrigger) view);
+        getHeaderContainer().addView(view);
     }
 
-    public void setLoadMoreFooterView(@LayoutRes int loadMoreFooterLayoutRes) {
-        ensureLoadMoreFooterContainer();
-        final View loadMoreFooter = LayoutInflater.from(getContext()).inflate(loadMoreFooterLayoutRes, mLoadMoreFooterContainer, false);
-        if (loadMoreFooter != null) {
-            setLoadMoreFooterView(loadMoreFooter);
-        }
+    public void setLoadMoreView(@LayoutRes int layoutId) {
+        setLoadMoreView(inflate(getContext(), layoutId, null));
     }
 
     public View getRefreshHeaderView() {
@@ -238,76 +203,57 @@ public class IRecyclerView extends RecyclerView {
         return mLoadMoreFooterView;
     }
 
-    public LinearLayout getHeaderContainer() {
-        ensureHeaderViewContainer();
-        return mHeaderViewContainer;
-    }
-
-    public LinearLayout getFooterContainer() {
-        ensureFooterViewContainer();
-        return mFooterViewContainer;
-    }
+//
+//    public LinearLayout getFooterContainer() {
+//        ensureFooterViewContainer();
+//        return mFooterViewContainer;
+//    }
 
     public void addHeaderView(View headerView) {
-        ensureHeaderViewContainer();
-        mHeaderViewContainer.addView(headerView);
+        getHeaderContainer().addView(headerView);
         Adapter adapter = getAdapter();
         if (adapter != null) {
-            adapter.notifyItemChanged(1);
+            adapter.notifyItemChanged(0);
         }
     }
 
     public void addFooterView(View footerView) {
-        ensureFooterViewContainer();
-        mFooterViewContainer.addView(footerView);
+        if (getFooterContainer().getChildCount() > 0) {
+            View loadMoreView = getFooterContainer().getChildAt(getFooterContainer().getChildCount() - 1);
+            if (loadMoreView instanceof DragTrigger) {
+                getFooterContainer().addView(footerView, getFooterContainer().getChildCount() - 2);
+            } else {
+                getFooterContainer().addView(footerView);
+            }
+        }
         Adapter adapter = getAdapter();
         if (adapter != null) {
-            adapter.notifyItemChanged(adapter.getItemCount() - 2);
+            adapter.notifyItemChanged(adapter.getItemCount() - 1);
         }
     }
 
-    public Adapter getIAdapter() {
-        final WrapperAdapter wrapperAdapter = (WrapperAdapter) getAdapter();
-        return wrapperAdapter.getAdapter();
-    }
-
-    public void setIAdapter(Adapter adapter) {
-        ensureRefreshHeaderContainer();
-        ensureHeaderViewContainer();
-        ensureFooterViewContainer();
-        ensureLoadMoreFooterContainer();
-        setAdapter(new WrapperAdapter(adapter, mRefreshHeaderContainer, mHeaderViewContainer, mFooterViewContainer, mLoadMoreFooterContainer));
-    }
-
-    private void ensureRefreshHeaderContainer() {
-        if (mRefreshHeaderContainer == null) {
-            mRefreshHeaderContainer = new RefreshHeaderLayout(getContext());
-            mRefreshHeaderContainer.setLayoutParams(new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0));
+    @Override
+    public Adapter getAdapter() {
+        Adapter adapter = super.getAdapter();
+        if (adapter instanceof WrapperAdapter) {
+            adapter = ((WrapperAdapter) adapter).getAdapter();
         }
+        return adapter;
     }
 
-    private void ensureLoadMoreFooterContainer() {
-        if (mLoadMoreFooterContainer == null) {
-            mLoadMoreFooterContainer = new FrameLayout(getContext());
-            mLoadMoreFooterContainer.setLayoutParams(new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        }
-    }
+    @Override
+    public void setAdapter(Adapter adapter) {
+        super.setAdapter(adapter);
 
-    private void ensureHeaderViewContainer() {
-        if (mHeaderViewContainer == null) {
-            mHeaderViewContainer = new LinearLayout(getContext());
-            mHeaderViewContainer.setOrientation(LinearLayout.VERTICAL);
-            mHeaderViewContainer.setLayoutParams(new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        }
     }
-
-    private void ensureFooterViewContainer() {
-        if (mFooterViewContainer == null) {
-            mFooterViewContainer = new LinearLayout(getContext());
-            mFooterViewContainer.setOrientation(LinearLayout.VERTICAL);
-            mFooterViewContainer.setLayoutParams(new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        }
-    }
+//
+//    public void setIAdapter(Adapter adapter) {
+//        ensureRefreshHeaderContainer();
+//        ensureHeaderViewContainer();
+//        ensureFooterViewContainer();
+//        ensureLoadMoreFooterContainer();
+//        setAdapter(new com.framework.widgets.irecyclerview.WrapperAdapter(adapter, mRefreshHeaderContainer, mHeaderViewContainer, mFooterViewContainer, mLoadMoreFooterContainer));
+//    }
 
     private boolean isRefreshTrigger(View refreshHeaderView) {
         return refreshHeaderView instanceof RefreshTrigger;
@@ -325,125 +271,6 @@ public class IRecyclerView extends RecyclerView {
         }
     }
 
-    private int mActivePointerId = -1;
-    private int mLastTouchX = 0;
-    private int mLastTouchY = 0;
-
-    @Override
-    public boolean onInterceptTouchEvent(MotionEvent e) {
-        final int action = MotionEventCompat.getActionMasked(e);
-        final int actionIndex = MotionEventCompat.getActionIndex(e);
-        switch (action) {
-            case MotionEvent.ACTION_DOWN: {
-                mActivePointerId = MotionEventCompat.getPointerId(e, 0);
-                mLastTouchX = (int) (MotionEventCompat.getX(e, actionIndex) + 0.5f);
-                mLastTouchY = (int) (MotionEventCompat.getY(e, actionIndex) + 0.5f);
-            }
-            break;
-
-            case MotionEvent.ACTION_POINTER_DOWN: {
-                mActivePointerId = MotionEventCompat.getPointerId(e, actionIndex);
-                mLastTouchX = (int) (MotionEventCompat.getX(e, actionIndex) + 0.5f);
-                mLastTouchY = (int) (MotionEventCompat.getY(e, actionIndex) + 0.5f);
-            }
-            break;
-
-            case MotionEventCompat.ACTION_POINTER_UP: {
-                onPointerUp(e);
-            }
-            break;
-        }
-
-        return super.onInterceptTouchEvent(e);
-    }
-
-    @Override
-    public boolean onTouchEvent(MotionEvent e) {
-        final int action = MotionEventCompat.getActionMasked(e);
-        switch (action) {
-            case MotionEvent.ACTION_DOWN: {
-                final int index = MotionEventCompat.getActionIndex(e);
-                mActivePointerId = MotionEventCompat.getPointerId(e, 0);
-                mLastTouchX = getMotionEventX(e, index);
-                mLastTouchY = getMotionEventY(e, index);
-            }
-            break;
-
-            case MotionEvent.ACTION_MOVE: {
-                final int index = MotionEventCompat.findPointerIndex(e, mActivePointerId);
-                if (index < 0) {
-                    Log.e(TAG, "Error processing scroll; pointer index for id " + index + " not found. Did any MotionEvents get skipped?");
-                    return false;
-                }
-
-                final int x = getMotionEventX(e, index);
-                final int y = getMotionEventY(e, index);
-
-                final int dx = x - mLastTouchX;
-                final int dy = y - mLastTouchY;
-
-                mLastTouchX = x;
-                mLastTouchY = y;
-
-                final boolean triggerCondition = isEnabled() && mRefreshEnabled && mRefreshHeaderView != null && isFingerDragging() && canTriggerRefresh();
-                if (DEBUG) {
-                    Log.i(TAG, "triggerCondition = " + triggerCondition + "; mStatus = " + mStatus + "; dy = " + dy);
-                }
-                if (triggerCondition) {
-
-                    final int refreshHeaderContainerHeight = mRefreshHeaderContainer.getMeasuredHeight();
-                    final int refreshHeaderViewHeight = mRefreshHeaderView.getMeasuredHeight();
-
-                    if (dy > 0 && mStatus == STATUS_DEFAULT) {
-                        setStatus(STATUS_SWIPING_TO_REFRESH);
-                        mRefreshTrigger.onStart(false, refreshHeaderViewHeight, mRefreshFinalMoveOffset);
-                    } else if (dy < 0) {
-                        if (mStatus == STATUS_SWIPING_TO_REFRESH && refreshHeaderContainerHeight <= 0) {
-                            setStatus(STATUS_DEFAULT);
-                        }
-                        if (mStatus == STATUS_DEFAULT) {
-                            break;
-                        }
-                    }
-
-                    if (mStatus == STATUS_SWIPING_TO_REFRESH || mStatus == STATUS_RELEASE_TO_REFRESH) {
-                        if (refreshHeaderContainerHeight >= refreshHeaderViewHeight) {
-                            setStatus(STATUS_RELEASE_TO_REFRESH);
-                        } else {
-                            setStatus(STATUS_SWIPING_TO_REFRESH);
-                        }
-                        fingerMove(dy);
-                        return true;
-                    }
-                }
-            }
-            break;
-
-            case MotionEventCompat.ACTION_POINTER_DOWN: {
-                final int index = MotionEventCompat.getActionIndex(e);
-                mActivePointerId = MotionEventCompat.getPointerId(e, index);
-                mLastTouchX = getMotionEventX(e, index);
-                mLastTouchY = getMotionEventY(e, index);
-            }
-            break;
-
-            case MotionEventCompat.ACTION_POINTER_UP: {
-                onPointerUp(e);
-            }
-            break;
-
-            case MotionEvent.ACTION_UP: {
-                onFingerUpStartAnimating();
-            }
-            break;
-
-            case MotionEvent.ACTION_CANCEL: {
-                onFingerUpStartAnimating();
-            }
-            break;
-        }
-        return super.onTouchEvent(e);
-    }
 
     private boolean isFingerDragging() {
         return getScrollState() == SCROLL_STATE_DRAGGING;
@@ -590,7 +417,7 @@ public class IRecyclerView extends RecyclerView {
                         mRefreshHeaderContainer.requestLayout();
                         setStatus(STATUS_REFRESHING);
                         if (mOnRefreshListener != null) {
-                            mOnRefreshListener.onRefresh();
+//                            mOnRefreshListener.onRefresh();
                             mRefreshTrigger.onRefresh();
                         }
                     } else {
@@ -606,7 +433,7 @@ public class IRecyclerView extends RecyclerView {
                     mRefreshHeaderContainer.requestLayout();
                     setStatus(STATUS_REFRESHING);
                     if (mOnRefreshListener != null) {
-                        mOnRefreshListener.onRefresh();
+//                        mOnRefreshListener.onRefresh();
                         mRefreshTrigger.onRefresh();
                     }
                 }
@@ -730,5 +557,37 @@ public class IRecyclerView extends RecyclerView {
                 break;
         }
         return statusLog;
+    }
+
+    public abstract static class ViewHolder extends RecyclerView.ViewHolder {
+
+        public ViewHolder(View itemView) {
+            super(itemView);
+        }
+
+        @Deprecated
+        public final int getIPosition() {
+            return getPosition() - 1;
+        }
+
+        public final int getILayoutPosition() {
+            return getLayoutPosition() - 1;
+        }
+
+        public final int getIAdapterPosition() {
+            return getAdapterPosition() - 1;
+        }
+
+        public final int getIOldPosition() {
+            return getOldPosition() - 1;
+        }
+
+        public final long getIItemId() {
+            return getItemId();
+        }
+
+        public final int getIItemViewType() {
+            return getItemViewType();
+        }
     }
 }
