@@ -22,7 +22,6 @@ import android.opengl.EGLSurface;
 import android.opengl.GLES20;
 import android.util.Log;
 
-
 import com.mamba.model.record.renderer.gpuimage.OpenGlUtils;
 
 import java.io.BufferedOutputStream;

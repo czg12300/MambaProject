@@ -184,7 +184,7 @@ public class VideoRecorder implements Runnable, ISurfaceRenderer {
         while (true) {
             RawFrame frame = pollRawFrame();
             if (frame != null) {
-                handFrameUpdate(frame);
+                renderer(frame);
             } else {
                 try {
                     Thread.sleep(10);
@@ -198,7 +198,7 @@ public class VideoRecorder implements Runnable, ISurfaceRenderer {
         }
         RawFrame frame = pollRawFrame();
         while (frame != null) {
-            handFrameUpdate(frame);
+            renderer(frame);
             frame = pollRawFrame();
         }
         mediaCodec.signalEndOfInputStream();
@@ -211,22 +211,14 @@ public class VideoRecorder implements Runnable, ISurfaceRenderer {
         }
     }
 
-    private void handFrameUpdate(RawFrame rawFrame) {
-        if (rawFrame == null) {
-            return;
-        }
-        int count = calculateEncodeTimes(rawFrame.timestamp);
-        for (int i = 0; i < count; i++) {
-            renderer(rawFrame);
-        }
-    }
 
     private void renderer(RawFrame rawFrame) {
         VLog.d("handFrameUpdate start");
         mInputWindowSurface.setPresentationTime(computePresentationTime(frameIndex++, mVideoParams.frameRate));
         mInput.setTextureTransformMatrix(rawFrame.transform);
         if (mFilter == null) {
-            mInput.onDrawFrame(rawFrame.textureId, gLCubeBuffer, gLTextureBuffer);
+//            mInput.onDrawFrame(rawFrame.textureId, gLCubeBuffer, gLTextureBuffer);
+            mInput.onDrawFrame( gLCubeBuffer, gLTextureBuffer);
         } else {
             mFilter.onDrawFrame(rawFrame.textureId, gLCubeBuffer, gLTextureBuffer);
         }
@@ -272,32 +264,6 @@ public class VideoRecorder implements Runnable, ISurfaceRenderer {
         long timestamp = 132 + frameIndex * 1000000000 / frameRate;
         VLog.d("timestamp =" + timestamp);
         return timestamp;
-    }
-
-    private int calculateEncodeTimes(long timestamp) {
-        int result = 0;
-        if (lastFrameTimestamp > 0) {
-            long preTimestampSpit = 1000 / mVideoParams.positionFrameRate;
-            long preTimestamp = lastFrameTimestamp + preTimestampSpit;
-            if (timestamp >= preTimestamp) {
-                int timestampTimes = (int) (((timestamp - lastFrameTimestamp) * 1.0f) / preTimestampSpit);
-                result = timestampTimes;
-                lastFrameTimestamp = lastFrameTimestamp + timestampTimes * preTimestampSpit;
-            }
-        } else {
-            result = 1;
-            lastFrameTimestamp = timestamp;
-        }
-        VLog.ld().append("calculateEncodeTimes positionFrameRate")
-                .append(mVideoParams.positionFrameRate)
-                .append("calculateEncodeTimes positionFrameRate")
-                .append(mVideoParams.positionFrameRate)
-                .append("calculateEncodeTimes lastFrameTimestamp")
-                .append(lastFrameTimestamp)
-                .append("calculateEncodeTimes result")
-                .append(result)
-                .showLog();
-        return result;
     }
 
     private void release() {
@@ -355,7 +321,7 @@ public class VideoRecorder implements Runnable, ISurfaceRenderer {
             // important that we just ignore the frame.
             return;
         }
-        pushRawFrame(new RawFrame(textureId, transform, System.currentTimeMillis()));
+        pushRawFrame(new RawFrame(textureId, transform, timestamp));
         VLog.d("offer success");
     }
 
@@ -364,12 +330,9 @@ public class VideoRecorder implements Runnable, ISurfaceRenderer {
         if (frame != null) {
             VLog.d(frame.toString());
             if (mRawFrameList != null) {
-//                int len = mRawFrameList.size();
-//                if (len < 5) {
                 synchronized (mRawFrameList) {
                     mRawFrameList.offer(frame);
                 }
-//                }
             }
         }
     }

@@ -8,7 +8,6 @@ import com.framework.ndk.videoutils.FfmpegFormatUtils;
 import com.framework.utils.FileUtil;
 import com.mamba.gloable.FolderManager;
 import com.mamba.model.VLog;
-import com.mamba.model.record.camera.CameraImp;
 import com.mamba.model.record.encode.OnRecorderListener;
 import com.mamba.model.record.encode.video.VideoParams;
 import com.mamba.model.record.encode.video.VideoRecorder;
@@ -150,20 +149,15 @@ public class RecordHolder {
         return file;
     }
 
-    private CameraImp.CameraImpParameters createCameraImpParameters() {
-        return CameraImp.CameraImpParametersBuilder.create()
-                .setPreviewFormat(ImageFormat.NV21)
-                .setPreviewSize(new CameraImp.Size(sPreviewWidth, sPreviewHeight))
-                .build();
-    }
 
-    public CameraImp getCameraImp() {
-        return cameraRenderer.getCameraImp();
+    public RecordCamera getCamera() {
+        return cameraRenderer.getCamera();
     }
 
     public void setGlSurfaceView(GLSurfaceView surfaceView) {
         cameraRenderer.setGLSurfaceView(surfaceView);
-        cameraRenderer.getCameraImp().setParameters(createCameraImpParameters());
+        cameraRenderer.setPreviewFormat(ImageFormat.YV12);
+        cameraRenderer.setPreviewSize(sPreviewWidth, sPreviewHeight);
     }
 
     public void setFilter(GPUImageFilter filter) {
@@ -199,7 +193,7 @@ public class RecordHolder {
                 frameRate /= 6;
                 break;
             case _X4:
-                frameRate /= 4;
+                frameRate *= 4;
                 break;
         }
         return frameRate;

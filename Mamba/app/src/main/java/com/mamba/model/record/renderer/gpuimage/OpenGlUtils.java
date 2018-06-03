@@ -26,7 +26,6 @@ import android.opengl.GLES20;
 import android.opengl.GLUtils;
 import android.util.Log;
 
-
 import com.mamba.model.record.renderer.gpuimage.filter.GPUImageFilter;
 
 import java.io.BufferedReader;

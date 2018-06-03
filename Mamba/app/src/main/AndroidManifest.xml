@@ -27,7 +27,7 @@
             android:name=".ui.activity.MainActivity"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".ui.RecordActivity"
+            android:name=".ugc.record.RecordActivity"
             android:screenOrientation="portrait"
             android:launchMode="singleTop"
             android:theme="@style/ActivityThemeFullScreen" />

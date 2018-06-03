@@ -3,7 +3,6 @@ package com.mamba.model.record.renderer.gpuimage.filter;
 import android.content.Context;
 import android.opengl.GLES20;
 
-
 import com.mamba.R;
 import com.mamba.model.record.renderer.gpuimage.OpenGlUtils;
 

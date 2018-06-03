@@ -3,12 +3,17 @@ package com.mamba.model.record.renderer.gpuimage.filter;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 
-
 import com.mamba.model.record.renderer.gpuimage.OpenGlUtils;
+import com.mamba.model.record.renderer.gpuimage.Rotation;
+import com.mamba.model.record.renderer.gpuimage.TextureRotationUtil;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
-public class CameraInputFilter extends GPUImageFilter{
+import javax.microedition.khronos.opengles.GL10;
+
+public class CameraInputFilter  {
     private static final String CAMERA_INPUT_VERTEX_SHADER = ""+
             "attribute vec4 position;\n" +
             "attribute vec4 inputTextureCoordinate;\n" +
@@ -42,23 +47,54 @@ public class CameraInputFilter extends GPUImageFilter{
     private int mFrameHeight = -1;
 
     public CameraInputFilter(){
-        super(CAMERA_INPUT_VERTEX_SHADER, CAMERA_INPUT_FRAGMENT_SHADER);
+        mVertexShader = CAMERA_INPUT_VERTEX_SHADER;
+        mFragmentShader = CAMERA_INPUT_FRAGMENT_SHADER;
+
+        mGLCubeBuffer = ByteBuffer.allocateDirect(TextureRotationUtil.CUBE.length * 4)
+                .order(ByteOrder.nativeOrder())
+                .asFloatBuffer();
+        mGLCubeBuffer.put(TextureRotationUtil.CUBE).position(0);
+
+        mGLTextureBuffer = ByteBuffer.allocateDirect(TextureRotationUtil.TEXTURE_NO_ROTATION.length * 4)
+                .order(ByteOrder.nativeOrder())
+                .asFloatBuffer();
+        mGLTextureBuffer.put(TextureRotationUtil.getRotation(Rotation.NORMAL, false, true)).position(0);
+
     }
 
-    protected void onInit() {
-        super.onInit();
-        mTextureTransformMatrixLocation = GLES20.glGetUniformLocation(mGLProgId, "textureTransform");
-    }
 
     public void setTextureTransformMatrix(float[] mtx){
         mTextureTransformMatrix = mtx;
     }
+    private int mTextureId=-1;
+    public int getTextureId(){
+        if(mTextureId==-1){
+            mTextureId=getExternalOESTextureID();
+        }
+        return mTextureId;
+    }
+    public static int getExternalOESTextureID() {
+        int[] texture = new int[1];
+        GLES20.glGenTextures(1, texture, 0);
+        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, texture[0]);
+        GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
+                GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_LINEAR);
+        GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
+                GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
+        GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
+                GL10.GL_TEXTURE_WRAP_S, GL10.GL_CLAMP_TO_EDGE);
+        GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
+                GL10.GL_TEXTURE_WRAP_T, GL10.GL_CLAMP_TO_EDGE);
+        return texture[0];
+    }
 
-    @Override
-    public int onDrawFrame(int textureId) {
+    public int onDrawFrame( FloatBuffer vertexBuffer, FloatBuffer textureBuffer) {
+        return -1;
+    }
+    public void onDrawFrame() {
         GLES20.glUseProgram(mGLProgId);
         if(!isInitialized()) {
-            return OpenGlUtils.NOT_INIT;
+            return ;
         }
         mGLCubeBuffer.position(0);
         GLES20.glVertexAttribPointer(mGLAttribPosition, 2, GLES20.GL_FLOAT, false, 0, mGLCubeBuffer);
@@ -68,9 +104,9 @@ public class CameraInputFilter extends GPUImageFilter{
         GLES20.glEnableVertexAttribArray(mGLAttribTextureCoordinate);
         GLES20.glUniformMatrix4fv(mTextureTransformMatrixLocation, 1, false, mTextureTransformMatrix, 0);
 
-        if(textureId != OpenGlUtils.NO_TEXTURE){
+        if(mTextureId != OpenGlUtils.NO_TEXTURE){
             GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-            GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, textureId);
+            GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, mTextureId);
             GLES20.glUniform1i(mGLUniformTexture, 0);
         }
 
@@ -78,99 +114,6 @@ public class CameraInputFilter extends GPUImageFilter{
         GLES20.glDisableVertexAttribArray(mGLAttribPosition);
         GLES20.glDisableVertexAttribArray(mGLAttribTextureCoordinate);
         GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, 0);
-        return OpenGlUtils.ON_DRAWN;
-    }
-
-    @Override
-    public int onDrawFrame(int textureId, FloatBuffer vertexBuffer, FloatBuffer textureBuffer) {
-        GLES20.glUseProgram(mGLProgId);
-        if(!isInitialized()) {
-            return OpenGlUtils.NOT_INIT;
-        }
-        vertexBuffer.position(0);
-        GLES20.glVertexAttribPointer(mGLAttribPosition, 2, GLES20.GL_FLOAT, false, 0, vertexBuffer);
-        GLES20.glEnableVertexAttribArray(mGLAttribPosition);
-        textureBuffer.position(0);
-        GLES20.glVertexAttribPointer(mGLAttribTextureCoordinate, 2, GLES20.GL_FLOAT, false, 0, textureBuffer);
-        GLES20.glEnableVertexAttribArray(mGLAttribTextureCoordinate);
-        GLES20.glUniformMatrix4fv(mTextureTransformMatrixLocation, 1, false, mTextureTransformMatrix, 0);
-
-        if(textureId != OpenGlUtils.NO_TEXTURE){
-            GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-            GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, textureId);
-            GLES20.glUniform1i(mGLUniformTexture, 0);
-        }
-
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
-        GLES20.glDisableVertexAttribArray(mGLAttribPosition);
-        GLES20.glDisableVertexAttribArray(mGLAttribTextureCoordinate);
-        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, 0);
-        return OpenGlUtils.ON_DRAWN;
-    }
-
-    public int onDrawToTexture(final int textureId) {
-        if(mFrameBuffers == null)
-            return OpenGlUtils.NO_TEXTURE;
-        GLES20.glViewport(0, 0, mFrameWidth, mFrameHeight);
-        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, mFrameBuffers[0]);
-        GLES20.glUseProgram(mGLProgId);
-        if(!isInitialized()) {
-            return OpenGlUtils.NOT_INIT;
-        }
-        mGLCubeBuffer.position(0);
-        GLES20.glVertexAttribPointer(mGLAttribPosition, 2, GLES20.GL_FLOAT, false, 0, mGLCubeBuffer);
-        GLES20.glEnableVertexAttribArray(mGLAttribPosition);
-        mGLTextureBuffer.position(0);
-        GLES20.glVertexAttribPointer(mGLAttribTextureCoordinate, 2, GLES20.GL_FLOAT, false, 0, mGLTextureBuffer);
-        GLES20.glEnableVertexAttribArray(mGLAttribTextureCoordinate);
-        GLES20.glUniformMatrix4fv(mTextureTransformMatrixLocation, 1, false, mTextureTransformMatrix, 0);
-
-        if(textureId != OpenGlUtils.NO_TEXTURE){
-            GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-            GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, textureId);
-            GLES20.glUniform1i(mGLUniformTexture, 0);
-        }
-
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
-        GLES20.glDisableVertexAttribArray(mGLAttribPosition);
-        GLES20.glDisableVertexAttribArray(mGLAttribTextureCoordinate);
-        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, 0);
-        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
-        GLES20.glViewport(0, 0, mOutputWidth, mOutputHeight);
-        return mFrameBufferTextures[0];
-    }
-
-    public void initCameraFrameBuffer(int width, int height) {
-        if(mFrameBuffers != null && (mFrameWidth != width || mFrameHeight != height))
-            destroyFramebuffers();
-        if (mFrameBuffers == null) {
-            mFrameWidth = width;
-            mFrameHeight = height;
-            mFrameBuffers = new int[1];
-            mFrameBufferTextures = new int[1];
-
-            GLES20.glGenFramebuffers(1, mFrameBuffers, 0);
-
-            GLES20.glGenTextures(1, mFrameBufferTextures, 0);
-            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mFrameBufferTextures[0]);
-            GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, width, height, 0,
-                    GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, null);
-            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D,
-                    GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
-            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D,
-                    GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
-            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D,
-                    GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
-            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D,
-                    GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
-
-            GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, mFrameBuffers[0]);
-            GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0,
-                    GLES20.GL_TEXTURE_2D, mFrameBufferTextures[0], 0);
-
-            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
-            GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
-        }
     }
 
     public void destroyFramebuffers() {
@@ -185,4 +128,59 @@ public class CameraInputFilter extends GPUImageFilter{
         mFrameWidth = -1;
         mFrameHeight = -1;
     }
+
+
+
+
+    private final String mVertexShader;
+    private final String mFragmentShader;
+    protected int mGLProgId;
+    protected int mGLAttribPosition;
+    protected int mGLUniformTexture;
+    protected int mGLAttribTextureCoordinate;
+
+    protected int mIntputWidth;
+    protected int mIntputHeight;
+    protected boolean mIsInitialized;
+    protected FloatBuffer mGLCubeBuffer;
+    protected FloatBuffer mGLTextureBuffer;
+    protected int mOutputWidth, mOutputHeight;
+
+
+    public void init() {
+        mGLProgId = OpenGlUtils.loadProgram(mVertexShader, mFragmentShader);
+        mGLAttribPosition = GLES20.glGetAttribLocation(mGLProgId, "position");
+        mGLUniformTexture = GLES20.glGetUniformLocation(mGLProgId, "inputImageTexture");
+        mGLAttribTextureCoordinate = GLES20.glGetAttribLocation(mGLProgId,
+                "inputTextureCoordinate");
+        mIsInitialized = true;
+        mTextureTransformMatrixLocation = GLES20.glGetUniformLocation(mGLProgId, "textureTransform");
+        mIsInitialized = true;
+    }
+
+
+    public final void destroy() {
+        mIsInitialized = false;
+        GLES20.glDeleteProgram(mGLProgId);
+        onDestroy();
+    }
+
+    protected void onDestroy() {
+    }
+
+    public void onInputSizeChanged(final int width, final int height) {
+        mIntputWidth = width;
+        mIntputHeight = height;
+    }
+
+
+    public boolean isInitialized() {
+        return mIsInitialized;
+    }
+
+    public void onDisplaySizeChanged(final int width, final int height) {
+        mOutputWidth = width;
+        mOutputHeight = height;
+    }
+
 }

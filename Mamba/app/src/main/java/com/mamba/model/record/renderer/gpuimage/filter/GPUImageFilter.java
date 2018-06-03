@@ -19,7 +19,6 @@ package com.mamba.model.record.renderer.gpuimage.filter;
 import android.graphics.PointF;
 import android.opengl.GLES20;
 
-
 import com.mamba.model.record.renderer.gpuimage.OpenGlUtils;
 import com.mamba.model.record.renderer.gpuimage.Rotation;
 import com.mamba.model.record.renderer.gpuimage.TextureRotationUtil;

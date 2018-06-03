@@ -9,7 +9,7 @@ import com.framework.utils.JumpUtils;
 import com.framework.widgets.MainTabLayoutView;
 import com.framework.widgets.MainTabViewPager;
 import com.mamba.R;
-import com.mamba.ui.RecordActivity;
+import com.mamba.ugc.record.RecordActivity;
 import com.mamba.ui.adapter.CommonFragmentPagerAdapter;
 import com.mamba.ui.entity.FragmentPage;
 import com.mamba.ui.fragment.HomeFragment;
